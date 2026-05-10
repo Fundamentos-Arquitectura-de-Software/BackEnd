@@ -13,10 +13,6 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "/api/recipes", produces = "application/json")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {
-        "http://localhost:4200",
-        "http://127.0.0.1:4200"
-})
 public class RecipesController {
 
     private final RecipeService recipeService;
