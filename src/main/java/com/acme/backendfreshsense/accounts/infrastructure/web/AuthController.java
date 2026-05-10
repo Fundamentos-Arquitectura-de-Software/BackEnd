@@ -4,6 +4,7 @@ import com.acme.backendfreshsense.accounts.application.dto.LoginRequest;
 import com.acme.backendfreshsense.accounts.application.dto.UserRegistrationRequest;
 import com.acme.backendfreshsense.accounts.application.dto.UserResponse;
 import com.acme.backendfreshsense.accounts.application.service.AccountService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +20,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody UserRegistrationRequest request) {
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRegistrationRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(accountService.register(request));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(accountService.login(request));
     }
 
