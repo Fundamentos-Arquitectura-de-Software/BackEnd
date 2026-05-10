@@ -8,10 +8,10 @@ import java.util.UUID;
 public class AchievementEntity {
 
     @Id
-    @Column(columnDefinition = "UUID")
+    @Column(columnDefinition = "VARCHAR(36)")
     private UUID id;
 
-    @Column(name = "user_id", nullable = false, columnDefinition = "UUID")
+    @Column(name = "user_id", nullable = false, columnDefinition = "VARCHAR(36)")
     private UUID userId;
 
     @Column(nullable = false, length = 100)
