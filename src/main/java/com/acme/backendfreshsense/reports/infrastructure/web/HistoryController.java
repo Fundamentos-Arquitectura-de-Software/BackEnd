@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/history")
-@CrossOrigin(origins = "https://front-end-fresh-sense.vercel.app") // o pon aquí tu dominio de Vercel
 public class HistoryController {
 
     private final HistoryService service;
