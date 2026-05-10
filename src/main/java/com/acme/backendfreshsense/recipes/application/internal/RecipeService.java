@@ -4,6 +4,7 @@ import com.acme.backendfreshsense.recipes.domain.model.aggregates.Recipe;
 import com.acme.backendfreshsense.recipes.infrastructure.persistence.jpa.RecipeRepository;
 import com.acme.backendfreshsense.recipes.interfaces.rest.resources.CreateRecipeResource;
 import com.acme.backendfreshsense.recipes.interfaces.rest.resources.RecipeResource;
+import com.acme.backendfreshsense.shared.infrastructure.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +26,7 @@ public class RecipeService {
     public RecipeResource getById(Long id) {
         return recipeRepository.findById(id)
                 .map(this::toResource)
-                .orElseThrow(() -> new RuntimeException("Recipe not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Recipe not found with id " + id));
     }
 
     public RecipeResource create(CreateRecipeResource resource) {
