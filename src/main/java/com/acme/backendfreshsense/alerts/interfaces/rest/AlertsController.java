@@ -1,7 +1,10 @@
 package com.acme.backendfreshsense.alerts.interfaces.rest;
+
 import com.acme.backendfreshsense.alerts.application.internal.AlertService;
-import com.acme.backendfreshsense.alerts.domain.model.aggregates.Alert;
+import com.acme.backendfreshsense.alerts.interfaces.rest.resources.AlertRequest;
+import com.acme.backendfreshsense.alerts.interfaces.rest.resources.AlertResponse;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -15,20 +18,17 @@ public class AlertsController {
     }
 
     @GetMapping
-    public List<Alert> getAll() {
+    public List<AlertResponse> getAll() {
         return service.getAll();
     }
 
     @PostMapping
-    public Alert create(@RequestBody Alert alert) {
-        return service.create(alert);
+    public AlertResponse create(@RequestBody AlertRequest request) {
+        return service.create(request);
     }
 
     @PutMapping("/{id}")
-    public Alert update(
-            @PathVariable Long id,
-            @RequestBody Alert alert
-    ) {
-        return service.update(id, alert);
+    public AlertResponse update(@PathVariable Long id, @RequestBody AlertRequest request) {
+        return service.update(id, request);
     }
 }
