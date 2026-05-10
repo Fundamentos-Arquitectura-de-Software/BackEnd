@@ -5,11 +5,13 @@ import com.acme.backendfreshsense.reports.application.dto.HistoryResponseDto;
 import com.acme.backendfreshsense.reports.domain.model.History;
 import com.acme.backendfreshsense.reports.domain.repository.HistoryRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional
 public class HistoryService {
 
     private final HistoryRepository repository;

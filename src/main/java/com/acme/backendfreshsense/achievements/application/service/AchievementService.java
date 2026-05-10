@@ -5,9 +5,14 @@ import com.acme.backendfreshsense.achievements.application.mapper.AchievementMap
 import com.acme.backendfreshsense.achievements.domain.model.Achievement;
 import com.acme.backendfreshsense.achievements.domain.repository.AchievementRepository;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.UUID;
 
+@Service
+@Transactional
 public class AchievementService {
 
     private final AchievementRepository repository;
