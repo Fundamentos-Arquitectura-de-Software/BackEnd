@@ -6,6 +6,7 @@ import com.acme.backendfreshsense.accounts.application.dto.UserResponse;
 import com.acme.backendfreshsense.accounts.domain.model.Role;
 import com.acme.backendfreshsense.accounts.domain.model.User;
 import com.acme.backendfreshsense.accounts.infrastructure.persistence.UserRepository;
+import com.acme.backendfreshsense.shared.infrastructure.exceptions.ResourceNotFoundException;
 import com.acme.backendfreshsense.shared.infrastructure.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -60,7 +61,7 @@ public class AccountService {
 
     public UserResponse getByEmail(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return new UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getRole(), null);
     }
