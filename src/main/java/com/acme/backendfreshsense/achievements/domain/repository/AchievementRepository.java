@@ -7,10 +7,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AchievementRepository {
-    List<Achievement> findByUserId(UUID userId);
-    Optional<Achievement> findByUserIdAndName(UUID userId, String name);
+    List<Achievement> findByUserId(Long userId);
+    Optional<Achievement> findByUserIdAndName(Long userId, String name);
     Optional<Achievement> findById(UUID id);
-    boolean existsByUserId(UUID userId);
+    boolean existsByUserId(Long userId);
     Achievement save(Achievement achievement);
     List<Achievement> saveAll(List<Achievement> achievements);
 }

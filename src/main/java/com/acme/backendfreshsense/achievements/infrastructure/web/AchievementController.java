@@ -20,19 +20,19 @@ public class AchievementController {
     }
 
     @PostMapping("/init")
-    public ResponseEntity<Void> initDefaults(@PathVariable UUID userId) {
+    public ResponseEntity<Void> initDefaults(@PathVariable Long userId) {
         service.ensureDefaultAchievements(userId);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
-    public List<AchievementDto> list(@PathVariable UUID userId) {
+    public List<AchievementDto> list(@PathVariable Long userId) {
         return service.listByUser(userId);
     }
 
     @PatchMapping("/{achievementId}")
     public AchievementDto update(
-            @PathVariable UUID userId,
+            @PathVariable Long userId,
             @PathVariable UUID achievementId,
             @RequestBody UpdateAchievementRequest req) {
         return service.updateProgress(userId, achievementId, req.completionPercentage());
@@ -40,7 +40,7 @@ public class AchievementController {
 
     @PatchMapping("/by-name/{name}")
     public AchievementDto updateByName(
-            @PathVariable UUID userId,
+            @PathVariable Long userId,
             @PathVariable String name,
             @RequestBody UpdateAchievementRequest req) {
         return service.updateByName(userId, name, req.completionPercentage());

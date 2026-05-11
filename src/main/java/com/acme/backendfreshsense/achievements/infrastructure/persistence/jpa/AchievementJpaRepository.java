@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AchievementJpaRepository extends JpaRepository<AchievementEntity, UUID> {
-    List<AchievementEntity> findByUserId(UUID userId);
-    Optional<AchievementEntity> findByUserIdAndName(UUID userId, String name);
-    boolean existsByUserId(UUID userId);
+    List<AchievementEntity> findByUserId(Long userId);
+    Optional<AchievementEntity> findByUserIdAndName(Long userId, String name);
+    boolean existsByUserId(Long userId);
 }

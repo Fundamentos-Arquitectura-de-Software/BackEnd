@@ -11,8 +11,8 @@ public class AchievementEntity {
     @Column(columnDefinition = "CHAR(36)")
     private UUID id;
 
-    @Column(name = "user_id", nullable = false, columnDefinition = "CHAR(36)")
-    private UUID userId;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -23,10 +23,9 @@ public class AchievementEntity {
     @Column(name = "is_default", nullable = false)
     private boolean isDefault;
 
-    // ...existing code...
     public AchievementEntity() {}
 
-    public AchievementEntity(UUID id, UUID userId, String name, int completionPercentage, boolean isDefault) {
+    public AchievementEntity(UUID id, Long userId, String name, int completionPercentage, boolean isDefault) {
         this.id = id;
         this.userId = userId;
         this.name = name;
@@ -35,13 +34,13 @@ public class AchievementEntity {
     }
 
     public UUID getId() { return id; }
-    public UUID getUserId() { return userId; }
+    public Long getUserId() { return userId; }
     public String getName() { return name; }
     public int getCompletionPercentage() { return completionPercentage; }
     public boolean isDefault() { return isDefault; }
 
     public void setId(UUID id) { this.id = id; }
-    public void setUserId(UUID userId) { this.userId = userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
     public void setName(String name) { this.name = name; }
     public void setCompletionPercentage(int completionPercentage) { this.completionPercentage = completionPercentage; }
     public void setDefault(boolean aDefault) { isDefault = aDefault; }
