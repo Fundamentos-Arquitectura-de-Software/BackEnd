@@ -3,6 +3,7 @@ package com.acme.backendfreshsense.inventory.interfaces.rest;
 import com.acme.backendfreshsense.inventory.application.internal.ProductService;
 import com.acme.backendfreshsense.inventory.interfaces.rest.resources.ProductRequest;
 import com.acme.backendfreshsense.inventory.interfaces.rest.resources.ProductResponse;
+import com.acme.backendfreshsense.inventory.interfaces.rest.resources.UpdateProductRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,5 +28,18 @@ public class ProductController {
     @GetMapping
     public List<ProductResponse> getAll() {
         return productService.getAll();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ProductResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateProductRequest request) {
+        return ResponseEntity.ok(productService.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        productService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

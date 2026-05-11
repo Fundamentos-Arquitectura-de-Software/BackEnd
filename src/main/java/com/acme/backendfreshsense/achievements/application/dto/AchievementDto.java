@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public record AchievementDto(
         UUID id,
-        UUID userId,
+        Long userId,
         String name,
         int completionPercentage,
         boolean isDefault

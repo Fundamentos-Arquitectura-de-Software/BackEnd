@@ -21,7 +21,7 @@ public class AchievementService {
         this.repository = repository;
     }
 
-    public void ensureDefaultAchievements(UUID userId) {
+    public void ensureDefaultAchievements(Long userId) {
         if (repository.existsByUserId(userId)) return;
         List<Achievement> defaults = List.of(
                 Achievement.createNew(userId, "Primer inicio de sesión", true),
@@ -31,11 +31,11 @@ public class AchievementService {
         repository.saveAll(defaults);
     }
 
-    public List<AchievementDto> listByUser(UUID userId) {
+    public List<AchievementDto> listByUser(Long userId) {
         return repository.findByUserId(userId).stream().map(AchievementMapper::toDto).toList();
     }
 
-    public AchievementDto updateProgress(UUID userId, UUID achievementId, int percentage) {
+    public AchievementDto updateProgress(Long userId, UUID achievementId, int percentage) {
         Achievement a = repository.findById(achievementId)
                 .filter(x -> x.getUserId().equals(userId))
                 .orElseThrow(() -> new IllegalArgumentException("Achievement no encontrado para el usuario"));
@@ -44,7 +44,7 @@ public class AchievementService {
         return AchievementMapper.toDto(a);
     }
 
-    public AchievementDto updateByName(UUID userId, String name, int percentage) {
+    public AchievementDto updateByName(Long userId, String name, int percentage) {
         Achievement a = repository.findByUserIdAndName(userId, name)
                 .orElseThrow(() -> new IllegalArgumentException("Achievement no encontrado por nombre"));
         a.setCompletionPercentage(percentage);

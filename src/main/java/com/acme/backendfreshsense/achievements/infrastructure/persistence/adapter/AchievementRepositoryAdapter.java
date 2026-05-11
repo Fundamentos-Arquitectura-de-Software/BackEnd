@@ -26,12 +26,12 @@ public class AchievementRepositoryAdapter implements AchievementRepository {
     }
 
     @Override
-    public List<Achievement> findByUserId(UUID userId) {
+    public List<Achievement> findByUserId(Long userId) {
         return jpa.findByUserId(userId).stream().map(AchievementRepositoryAdapter::toDomain).toList();
     }
 
     @Override
-    public Optional<Achievement> findByUserIdAndName(UUID userId, String name) {
+    public Optional<Achievement> findByUserIdAndName(Long userId, String name) {
         return jpa.findByUserIdAndName(userId, name).map(AchievementRepositoryAdapter::toDomain);
     }
 
@@ -41,7 +41,7 @@ public class AchievementRepositoryAdapter implements AchievementRepository {
     }
 
     @Override
-    public boolean existsByUserId(UUID userId) {
+    public boolean existsByUserId(Long userId) {
         return jpa.existsByUserId(userId);
     }
 
