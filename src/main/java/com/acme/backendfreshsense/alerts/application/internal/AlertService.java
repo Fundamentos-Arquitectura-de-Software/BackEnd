@@ -2,6 +2,8 @@ package com.acme.backendfreshsense.alerts.application.internal;
 
 import com.acme.backendfreshsense.alerts.domain.model.aggregates.Alert;
 import com.acme.backendfreshsense.alerts.infrastructure.persistence.jpa.AlertRepository;
+import com.acme.backendfreshsense.alerts.interfaces.rest.resources.AlertRequest;
+import com.acme.backendfreshsense.alerts.interfaces.rest.resources.AlertResponse;
 import com.acme.backendfreshsense.shared.infrastructure.exceptions.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,25 +20,44 @@ public class AlertService {
         this.repo = repo;
     }
 
-    public List<Alert> getAll() {
-        return repo.findAll();
+    public List<AlertResponse> getAll() {
+        return repo.findAll().stream().map(this::toResponse).toList();
     }
 
-    public Alert create(Alert alert) {
-        return repo.save(alert);
+    public AlertResponse create(AlertRequest request) {
+        Alert alert = new Alert();
+        alert.setTitle(request.title());
+        alert.setMessage(request.message());
+        alert.setSeverity(request.severity());
+        alert.setSource(request.source());
+        alert.setState(request.state());
+        alert.setTimeAgo(request.timeAgo());
+        return toResponse(repo.save(alert));
     }
 
-    public Alert update(Long id, Alert updated) {
+    public AlertResponse update(Long id, AlertRequest request) {
         Alert existing = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Alert not found with id " + id));
 
-        if (updated.getTitle() != null) existing.setTitle(updated.getTitle());
-        if (updated.getMessage() != null) existing.setMessage(updated.getMessage());
-        if (updated.getSeverity() != null) existing.setSeverity(updated.getSeverity());
-        if (updated.getSource() != null) existing.setSource(updated.getSource());
-        if (updated.getTimeAgo() != null) existing.setTimeAgo(updated.getTimeAgo());
-        if (updated.getState() != null) existing.setState(updated.getState());
+        if (request.title() != null) existing.setTitle(request.title());
+        if (request.message() != null) existing.setMessage(request.message());
+        if (request.severity() != null) existing.setSeverity(request.severity());
+        if (request.source() != null) existing.setSource(request.source());
+        if (request.timeAgo() != null) existing.setTimeAgo(request.timeAgo());
+        if (request.state() != null) existing.setState(request.state());
 
-        return repo.save(existing);
+        return toResponse(repo.save(existing));
+    }
+
+    private AlertResponse toResponse(Alert alert) {
+        return new AlertResponse(
+                alert.getId(),
+                alert.getTitle(),
+                alert.getMessage(),
+                alert.getSeverity(),
+                alert.getSource(),
+                alert.getState(),
+                alert.getTimeAgo()
+        );
     }
 }
