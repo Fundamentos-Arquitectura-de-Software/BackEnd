@@ -1,19 +1,27 @@
-package com.acme.backendfreshsense.alerts.domain.model.aggregates;
+package com.acme.backendfreshsense.alerts.infrastructure.persistence.jpa;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Entity
+@Table(name = "alert")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Alert {
+public class AlertEntity {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String title;
     private String message;
     private String severity;
     private String source;
     private String state;
+
+    @Column(name = "time_ago")
     private String timeAgo;
 }
