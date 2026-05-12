@@ -41,7 +41,7 @@ public class AccountService {
         );
 
         User saved = userRepository.save(user);
-        String token = jwtService.generateToken(saved.getEmail());
+        String token = jwtService.generateToken(saved.getEmail(), saved.getId(), saved.getRole().name());
 
         return new UserResponse(saved.getId(), saved.getEmail(), saved.getFullName(), saved.getRole(), token);
     }
@@ -54,7 +54,7 @@ public class AccountService {
             throw new IllegalArgumentException("Credenciales inválidas");
         }
 
-        String token = jwtService.generateToken(user.getEmail());
+        String token = jwtService.generateToken(user.getEmail(), user.getId(), user.getRole().name());
 
         return new UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getRole(), token);
     }
