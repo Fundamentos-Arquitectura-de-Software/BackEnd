@@ -25,6 +25,7 @@ public class AlertRepositoryAdapter implements AlertRepository {
         a.setSource(e.getSource());
         a.setState(e.getState());
         a.setTimeAgo(e.getTimeAgo());
+        a.setUserId(e.getUserId());
         return a;
     }
 
@@ -37,12 +38,13 @@ public class AlertRepositoryAdapter implements AlertRepository {
         e.setSource(a.getSource());
         e.setState(a.getState());
         e.setTimeAgo(a.getTimeAgo());
+        e.setUserId(a.getUserId());
         return e;
     }
 
     @Override
-    public List<Alert> findAll() {
-        return jpa.findAll().stream().map(AlertRepositoryAdapter::toDomain).toList();
+    public List<Alert> findByUserId(Long userId) {
+        return jpa.findByUserId(userId).stream().map(AlertRepositoryAdapter::toDomain).toList();
     }
 
     @Override

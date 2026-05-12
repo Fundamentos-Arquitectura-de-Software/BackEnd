@@ -16,4 +16,5 @@ public class Alert {
     private String source;
     private String state;
     private String timeAgo;
+    private Long userId;
 }

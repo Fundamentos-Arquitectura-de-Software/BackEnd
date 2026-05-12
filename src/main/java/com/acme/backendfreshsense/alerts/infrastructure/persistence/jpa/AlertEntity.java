@@ -24,4 +24,7 @@ public class AlertEntity {
 
     @Column(name = "time_ago")
     private String timeAgo;
+
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 }

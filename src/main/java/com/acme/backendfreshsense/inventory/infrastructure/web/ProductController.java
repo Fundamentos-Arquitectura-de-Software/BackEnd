@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,12 +22,13 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(productService.create(request, currentUserId()));
     }
 
     @GetMapping
     public List<ProductResponse> getAll() {
-        return productService.getAll();
+        return productService.getAll(currentUserId());
     }
 
     @PatchMapping("/{id}")
@@ -40,5 +42,9 @@ public class ProductController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private Long currentUserId() {
+        return (Long) SecurityContextHolder.getContext().getAuthentication().getDetails();
     }
 }

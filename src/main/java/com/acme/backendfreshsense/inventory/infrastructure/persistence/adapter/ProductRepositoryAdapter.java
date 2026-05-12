@@ -24,6 +24,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
                 .category(e.getCategory())
                 .quantity(e.getQuantity())
                 .imageUrl(e.getImageUrl())
+                .userId(e.getUserId())
                 .build();
     }
 
@@ -35,6 +36,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
                 .category(p.getCategory())
                 .quantity(p.getQuantity())
                 .imageUrl(p.getImageUrl())
+                .userId(p.getUserId())
                 .build();
     }
 
@@ -44,8 +46,8 @@ public class ProductRepositoryAdapter implements ProductRepository {
     }
 
     @Override
-    public List<Product> findAll() {
-        return jpa.findAll().stream().map(ProductRepositoryAdapter::toDomain).toList();
+    public List<Product> findByUserId(Long userId) {
+        return jpa.findByUserId(userId).stream().map(ProductRepositoryAdapter::toDomain).toList();
     }
 
     @Override
