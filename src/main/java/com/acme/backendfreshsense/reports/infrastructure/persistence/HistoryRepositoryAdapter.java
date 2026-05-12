@@ -2,11 +2,8 @@ package com.acme.backendfreshsense.reports.infrastructure.persistence;
 
 import com.acme.backendfreshsense.reports.domain.model.History;
 import com.acme.backendfreshsense.reports.domain.repository.HistoryRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
-@Repository
 public class HistoryRepositoryAdapter implements HistoryRepository {
 
     private final HistoryJpaRepository jpaRepository;

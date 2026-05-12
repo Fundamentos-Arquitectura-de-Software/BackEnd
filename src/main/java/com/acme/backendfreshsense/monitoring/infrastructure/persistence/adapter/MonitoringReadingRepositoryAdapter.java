@@ -2,7 +2,8 @@ package com.acme.backendfreshsense.monitoring.infrastructure.persistence.adapter
 
 import com.acme.backendfreshsense.monitoring.domain.model.MonitoringReading;
 import com.acme.backendfreshsense.monitoring.domain.repository.MonitoringReadingRepository;
-import com.acme.backendfreshsense.monitoring.infrastructure.persistence.MonitoringJpaRepository;
+import com.acme.backendfreshsense.monitoring.infrastructure.persistence.jpa.MonitoringJpaRepository;
+import com.acme.backendfreshsense.monitoring.infrastructure.persistence.jpa.MonitoringReadingEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,16 +18,43 @@ public class MonitoringReadingRepositoryAdapter implements MonitoringReadingRepo
 
     @Override
     public MonitoringReading save(MonitoringReading reading) {
-        return jpa.save(reading);
+        MonitoringReadingEntity saved = jpa.save(toEntity(reading));
+        return toDomain(saved);
     }
 
     @Override
     public Optional<MonitoringReading> findLatest() {
-        return jpa.findTopByOrderByRecordedAtDesc();
+        return jpa.findTopByOrderByRecordedAtDesc().map(this::toDomain);
     }
 
     @Override
     public List<MonitoringReading> findAll() {
-        return jpa.findAll();
+        return jpa.findAll().stream().map(this::toDomain).toList();
+    }
+
+    private MonitoringReading toDomain(MonitoringReadingEntity e) {
+        return MonitoringReading.builder()
+                .id(e.getId())
+                .temperature(e.getTemperature())
+                .humidity(e.getHumidity())
+                .ethyleneLevel(e.getEthyleneLevel())
+                .oxygenLevel(e.getOxygenLevel())
+                .ripeness(e.getRipeness())
+                .cleanliness(e.getCleanliness())
+                .recordedAt(e.getRecordedAt())
+                .build();
+    }
+
+    private MonitoringReadingEntity toEntity(MonitoringReading r) {
+        return MonitoringReadingEntity.builder()
+                .id(r.getId())
+                .temperature(r.getTemperature())
+                .humidity(r.getHumidity())
+                .ethyleneLevel(r.getEthyleneLevel())
+                .oxygenLevel(r.getOxygenLevel())
+                .ripeness(r.getRipeness())
+                .cleanliness(r.getCleanliness())
+                .recordedAt(r.getRecordedAt())
+                .build();
     }
 }

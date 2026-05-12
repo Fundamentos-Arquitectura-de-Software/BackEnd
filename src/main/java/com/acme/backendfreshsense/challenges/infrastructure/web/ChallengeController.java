@@ -5,6 +5,8 @@ import com.acme.backendfreshsense.challenges.application.dto.LeaderboardEntryDto
 import com.acme.backendfreshsense.challenges.application.service.ChallengeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,23 +24,24 @@ public class ChallengeController {
     }
 
     @PostMapping("/{challengeId}/enroll")
-    public ResponseEntity<Void> enroll(
-            @PathVariable Long challengeId,
-            @RequestParam Long userId) {
-        challengeService.enroll(challengeId, userId);
+    public ResponseEntity<Void> enroll(@PathVariable Long challengeId) {
+        challengeService.enroll(challengeId, resolveUserId());
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{challengeId}/enroll")
-    public ResponseEntity<Void> leave(
-            @PathVariable Long challengeId,
-            @RequestParam Long userId) {
-        challengeService.leave(challengeId, userId);
+    public ResponseEntity<Void> leave(@PathVariable Long challengeId) {
+        challengeService.leave(challengeId, resolveUserId());
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{challengeId}/leaderboard")
     public List<LeaderboardEntryDto> getLeaderboard(@PathVariable Long challengeId) {
         return challengeService.getLeaderboard(challengeId);
+    }
+
+    private Long resolveUserId() {
+        var auth = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        return (Long) auth.getDetails();
     }
 }

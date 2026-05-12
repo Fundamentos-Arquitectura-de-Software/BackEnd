@@ -5,14 +5,12 @@ import com.acme.backendfreshsense.accounts.application.dto.UserRegistrationReque
 import com.acme.backendfreshsense.accounts.application.dto.UserResponse;
 import com.acme.backendfreshsense.accounts.domain.model.Role;
 import com.acme.backendfreshsense.accounts.domain.model.User;
-import com.acme.backendfreshsense.accounts.infrastructure.persistence.UserRepository;
+import com.acme.backendfreshsense.accounts.domain.repository.UserRepository;
 import com.acme.backendfreshsense.shared.infrastructure.exceptions.ResourceNotFoundException;
 import com.acme.backendfreshsense.shared.infrastructure.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
 @Transactional
 public class AccountService {
 
