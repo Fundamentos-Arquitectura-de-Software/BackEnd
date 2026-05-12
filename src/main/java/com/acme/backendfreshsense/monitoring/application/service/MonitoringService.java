@@ -3,21 +3,19 @@ package com.acme.backendfreshsense.monitoring.application.service;
 import com.acme.backendfreshsense.monitoring.application.dto.MonitoringReadingDto;
 import com.acme.backendfreshsense.monitoring.application.dto.MonitoringReadingRequest;
 import com.acme.backendfreshsense.monitoring.domain.model.MonitoringReading;
-import com.acme.backendfreshsense.monitoring.infrastructure.persistence.MonitoringJpaRepository;
+import com.acme.backendfreshsense.monitoring.domain.repository.MonitoringReadingRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-@Service
 @Transactional
 @RequiredArgsConstructor
 public class MonitoringService {
 
-    private final MonitoringJpaRepository repository;
+    private final MonitoringReadingRepository repository;
 
     public MonitoringReadingDto save(MonitoringReadingRequest request) {
         MonitoringReading reading = MonitoringReading.builder()
@@ -33,7 +31,7 @@ public class MonitoringService {
     }
 
     public Optional<MonitoringReadingDto> getLatest() {
-        return repository.findTopByOrderByRecordedAtDesc().map(this::toDto);
+        return repository.findLatest().map(this::toDto);
     }
 
     public List<MonitoringReadingDto> getAll() {

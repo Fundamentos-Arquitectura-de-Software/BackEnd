@@ -4,24 +4,22 @@ import com.acme.backendfreshsense.challenges.application.dto.ChallengeDto;
 import com.acme.backendfreshsense.challenges.application.dto.LeaderboardEntryDto;
 import com.acme.backendfreshsense.challenges.domain.model.Challenge;
 import com.acme.backendfreshsense.challenges.domain.model.Enrollment;
-import com.acme.backendfreshsense.challenges.infrastructure.persistence.ChallengeJpaRepository;
-import com.acme.backendfreshsense.challenges.infrastructure.persistence.EnrollmentJpaRepository;
+import com.acme.backendfreshsense.challenges.domain.repository.ChallengeRepository;
+import com.acme.backendfreshsense.challenges.domain.repository.EnrollmentRepository;
 import com.acme.backendfreshsense.shared.infrastructure.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Service
 @Transactional
 @RequiredArgsConstructor
 public class ChallengeService {
 
-    private final ChallengeJpaRepository challengeRepo;
-    private final EnrollmentJpaRepository enrollmentRepo;
+    private final ChallengeRepository challengeRepo;
+    private final EnrollmentRepository enrollmentRepo;
 
     public List<ChallengeDto> getAllChallenges() {
         return challengeRepo.findAll().stream().map(this::toDto).toList();
