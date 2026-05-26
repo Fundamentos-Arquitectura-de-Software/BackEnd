@@ -15,23 +15,44 @@ import java.util.Map;
 public class JwtService {
 
     private final SecretKey key;
-    private final long expirationMs;
+    private final long accessExpirationMs;
+    private final long refreshExpirationMs;
 
     public JwtService(
             @Value("${authorization.jwt.secret}") String secret,
-            @Value("${authorization.jwt.expiration.days}") int expirationDays) {
+            @Value("${authorization.jwt.access.expiration.minutes:15}") int accessMinutes,
+            @Value("${authorization.jwt.refresh.expiration.days:7}") int refreshDays) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expirationMs = (long) expirationDays * 24 * 60 * 60 * 1000;
+        this.accessExpirationMs = (long) accessMinutes * 60 * 1000;
+        this.refreshExpirationMs = (long) refreshDays * 24 * 60 * 60 * 1000;
     }
 
-    public String generateToken(String email, Long userId, String role) {
+    /** Access token corto (15 min por defecto) con claims userId y role. */
+    public String generateAccessToken(String email, Long userId, String role) {
         return Jwts.builder()
                 .subject(email)
-                .claims(Map.of("userId", userId, "role", role))
+                .claims(Map.of("userId", userId, "role", role, "type", "access"))
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expirationMs))
+                .expiration(new Date(System.currentTimeMillis() + accessExpirationMs))
                 .signWith(key)
                 .compact();
+    }
+
+    /** Refresh token largo (7 días por defecto), solo subject y type. */
+    public String generateRefreshToken(String email, Long userId) {
+        return Jwts.builder()
+                .subject(email)
+                .claims(Map.of("userId", userId, "type", "refresh"))
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + refreshExpirationMs))
+                .signWith(key)
+                .compact();
+    }
+
+    /** @deprecated Usar generateAccessToken. Mantenido por compatibilidad. */
+    @Deprecated
+    public String generateToken(String email, Long userId, String role) {
+        return generateAccessToken(email, userId, role);
     }
 
     public String extractEmail(String token) {
