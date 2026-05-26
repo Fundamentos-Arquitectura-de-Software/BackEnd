@@ -48,7 +48,7 @@ public class AccountService {
                 request.getEmail(),
                 passwordEncoder.encode(request.getPassword()),
                 request.getFullName(),
-                Role.USER_FREE
+                Role.USER_STANDARD
         );
 
         User saved = userRepository.save(user);

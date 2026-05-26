@@ -33,8 +33,8 @@ public class RoleService {
     public void onSubscriptionCancelled(SubscriptionCancelledEvent event) {
         userRepository.findById(event.getUserId()).ifPresent(user -> {
             String previousRole = user.getRole().name();
-            userRepository.updateRole(event.getUserId(), Role.USER_FREE);
-            eventPublisher.publishEvent(new UserRoleChangedEvent(event.getUserId(), previousRole, Role.USER_FREE.name()));
+            userRepository.updateRole(event.getUserId(), Role.USER_STANDARD);
+            eventPublisher.publishEvent(new UserRoleChangedEvent(event.getUserId(), previousRole, Role.USER_STANDARD.name()));
         });
     }
 }

@@ -38,9 +38,13 @@ DB_USER=
 DB_PASSWORD=
 JWT_SECRET=
 AES_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 ```
 
 Los valores de estas variables no se publican en el repositorio por razones de seguridad. Contactar al lider del proyecto para recibirlos de forma privada antes de levantar el entorno local.
+
+Para obtener las credenciales de Google (`GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`), el lider del proyecto debe crearlas en Google Cloud Console bajo el proyecto de FreshSense y compartirlas junto con las demas variables.
 
 Las variables de entorno disponibles y sus valores por defecto son:
 
@@ -53,9 +57,12 @@ Las variables de entorno disponibles y sus valores por defecto son:
 | `DB_PASSWORD`        | Password de MySQL                                | —                     |
 | `JWT_SECRET`         | Clave para firmar JWT (minimo 32 caracteres)     | —                     |
 | `AES_SECRET`         | Clave AES-256 para cifrado en reposo (32+ chars) | —                     |
-| `JWT_ACCESS_MINUTES` | Duracion del access token en minutos             | `15`                  |
-| `JWT_REFRESH_DAYS`   | Duracion del refresh token en dias               | `7`                   |
-| `PORT`               | Puerto HTTP del servidor                         | `8080`                |
+| `JWT_ACCESS_MINUTES`   | Duracion del access token en minutos              | `15`                  |
+| `JWT_REFRESH_DAYS`     | Duracion del refresh token en dias                | `7`                   |
+| `PORT`                 | Puerto HTTP del servidor                          | `8080`                |
+| `GOOGLE_CLIENT_ID`     | Client ID de Google OAuth2                        | —                     |
+| `GOOGLE_CLIENT_SECRET` | Client Secret de Google OAuth2                    | —                     |
+| `FRONTEND_URL`         | URL base del frontend (redirect post-OAuth2)      | `http://localhost:4200` |
 
 En produccion (Railway, Render, etc.) se usan las variables `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD` que provee la plataforma automaticamente.
 
@@ -93,6 +100,28 @@ La especificacion OpenAPI (JSON) esta en:
 ```
 http://localhost:8080/v3/api-docs
 ```
+
+---
+
+## OAuth2 — Login con Google
+
+El backend soporta autenticacion via Google OAuth2 ademas del login tradicional con email/password.
+
+**Flujo:**
+1. El frontend redirige al usuario a `http://localhost:8080/oauth2/authorization/google`
+2. Google autentica al usuario y redirige de vuelta al backend
+3. El backend crea o recupera el usuario en la BD con rol `USER_STANDARD`
+4. Se emiten las cookies HttpOnly `authToken` y `refreshToken` exactamente igual que en el login tradicional
+5. El usuario es redirigido al frontend en `{FRONTEND_URL}/home`
+
+**Configuracion necesaria en Google Cloud Console:**
+- Crear un proyecto en [Google Cloud Console](https://console.cloud.google.com)
+- Habilitar la API de Google+ o People API
+- Crear credenciales OAuth2 de tipo "Aplicacion web"
+- Agregar como URI de redireccion autorizado: `http://localhost:8080/login/oauth2/code/google`
+- Copiar el Client ID y Client Secret a las variables de entorno `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`
+
+**Nota:** Si `GOOGLE_CLIENT_ID` esta vacio, el endpoint OAuth2 no estara disponible pero el resto del sistema funciona normalmente.
 
 ---
 
