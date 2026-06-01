@@ -2,33 +2,31 @@ package com.acme.backendfreshsense.alerts.infrastructure.web;
 
 import com.acme.backendfreshsense.alerts.application.dto.AlertRequest;
 import com.acme.backendfreshsense.alerts.application.dto.AlertResponse;
-import com.acme.backendfreshsense.alerts.application.service.AlertService;
+import com.acme.backendfreshsense.alerts.infrastructure.feign.AlertsFeignClient;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/alerts")
+@RequiredArgsConstructor
 public class AlertsController {
 
-    private final AlertService service;
-
-    public AlertsController(AlertService service) {
-        this.service = service;
-    }
+    private final AlertsFeignClient alertsFeignClient;
 
     @GetMapping
     public List<AlertResponse> getAll() {
-        return service.getAll();
+        return alertsFeignClient.getAll();
     }
 
     @PostMapping
     public AlertResponse create(@RequestBody AlertRequest request) {
-        return service.create(request);
+        return alertsFeignClient.create(request);
     }
 
     @PutMapping("/{id}")
     public AlertResponse update(@PathVariable Long id, @RequestBody AlertRequest request) {
-        return service.update(id, request);
+        return alertsFeignClient.update(id, request);
     }
 }
