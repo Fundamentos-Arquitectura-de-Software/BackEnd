@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -141,57 +142,7 @@ public class AchievementController {
     public AchievementDto update(
             @Parameter(description = "ID del usuario", example = "1") @PathVariable Long userId,
             @Parameter(description = "UUID del logro", example = "a1b2c3d4-e5f6-7890-ab12-cd34ef567890") @PathVariable UUID achievementId,
-            @RequestBody UpdateAchievementRequest req) {
+            @Valid @RequestBody UpdateAchievementRequest req) {
         return service.updateProgress(userId, achievementId, req.completionPercentage());
-    }
-
-    @Operation(
-        summary = "Actualizar progreso de un logro por nombre",
-        description = "Modifica el `completionPercentage` de un logro buscándolo por su nombre en lugar de su UUID. " +
-                      "Útil cuando el cliente solo conoce el nombre del logro (ej. `Sin desperdicio`)."
-    )
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        required = true,
-        content = @Content(
-            mediaType = MediaType.APPLICATION_JSON_VALUE,
-            schema = @Schema(implementation = UpdateAchievementRequest.class),
-            examples = @ExampleObject(
-                name = "Completar logro",
-                value = "{\"completionPercentage\": 100}"
-            )
-        )
-    )
-    @ApiResponses({
-        @ApiResponse(
-            responseCode = "200",
-            description = "Logro actualizado",
-            content = @Content(
-                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                schema = @Schema(implementation = AchievementDto.class),
-                examples = @ExampleObject(
-                    value = """
-                            {
-                              "id": "b2c3d4e5-f6a7-8901-bc23-de45fg678901",
-                              "userId": 1,
-                              "name": "Sin desperdicio",
-                              "completionPercentage": 100,
-                              "isDefault": true
-                            }"""
-                )
-            )
-        ),
-        @ApiResponse(responseCode = "404", description = "Logro no encontrado con ese nombre para el usuario",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                examples = @ExampleObject(value = "{\"error\": \"Logro no encontrado con nombre: Sin desperdicio\"}"))),
-        @ApiResponse(responseCode = "401", description = "Token ausente o inválido",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
-    })
-    @PatchMapping("/by-name/{name}")
-    public AchievementDto updateByName(
-            @Parameter(description = "ID del usuario", example = "1") @PathVariable Long userId,
-            @Parameter(description = "Nombre del logro", example = "Sin desperdicio") @PathVariable String name,
-            @RequestBody UpdateAchievementRequest req) {
-        return service.updateByName(userId, name, req.completionPercentage());
     }
 }

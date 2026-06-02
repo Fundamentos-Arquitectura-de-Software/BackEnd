@@ -23,6 +23,11 @@ public class UserRegistrationRequest {
 
     @Schema(description = "Nombre completo del usuario", example = "María López", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El nombre es obligatorio")
+    @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
+    @Pattern(
+            regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ ']+$",
+            message = "El nombre completo no puede contener números, ni caracteres"
+    )
     private String fullName;
 
     public UserRegistrationRequest() {}

@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -120,7 +121,7 @@ public class AlertsController {
                 examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
     })
     @PostMapping
-    public AlertResponse create(@RequestBody AlertRequest request) {
+    public AlertResponse create(@Valid @RequestBody AlertRequest request) {
         return service.create(request);
     }
 
@@ -178,7 +179,7 @@ public class AlertsController {
     @PutMapping("/{id}")
     public AlertResponse update(
             @Parameter(description = "ID de la alerta a actualizar", example = "3") @PathVariable Long id,
-            @RequestBody AlertRequest request) {
+            @Valid @RequestBody AlertRequest request) {
         return service.update(id, request);
     }
 }

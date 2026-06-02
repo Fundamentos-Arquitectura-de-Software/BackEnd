@@ -22,7 +22,7 @@ public class UserEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Role role = Role.USER;
+    private Role role = Role.USER_STANDARD;
 
     protected UserEntity() {}
 

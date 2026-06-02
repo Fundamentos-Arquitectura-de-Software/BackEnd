@@ -12,9 +12,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Tag(name = "Reports", description = "Historial de acciones sobre el inventario (consumo y descarte) para reportes semanales")
 @RestController
@@ -70,6 +74,61 @@ public class HistoryController {
     @GetMapping
     public List<HistoryResponseDto> getAll() {
         return service.getAll();
+    }
+
+    @Operation(
+        summary = "US17: Análisis detallado de inventario (solo premium)",
+        description = "Devuelve KPIs agrupados: total consumido vs descartado por categoría. Requiere rol `USER_PREMIUM` o `ADMIN`."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Análisis agrupado por categoría",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                examples = @ExampleObject(
+                    value = """
+                            {
+                              "totalConsumed": 42,
+                              "totalDiscarded": 8,
+                              "wasteRate": 0.16,
+                              "byCategory": {
+                                "Lácteos": 15,
+                                "Verduras": 20,
+                                "Panadería": 15
+                              }
+                            }"""
+                )
+            )
+        ),
+        @ApiResponse(responseCode = "403", description = "Acceso denegado — se requiere plan premium",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                examples = @ExampleObject(value = "{\"error\": \"Acceso denegado\"}"))),
+        @ApiResponse(responseCode = "401", description = "Token ausente o inválido",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
+    })
+    @GetMapping("/advanced")
+    @PreAuthorize("hasAnyRole('USER_PREMIUM', 'ADMIN')")
+    public ResponseEntity<Map<String, Object>> getAdvancedAnalytics() {
+        List<HistoryResponseDto> all = service.getAll();
+
+        long totalConsumed  = all.stream().filter(h -> "CONSUME".equalsIgnoreCase(h.action())).count();
+        long totalDiscarded = all.stream().filter(h -> "DISCARD".equalsIgnoreCase(h.action())).count();
+
+        Map<String, Long> byCategory = all.stream()
+                .collect(Collectors.groupingBy(
+                        h -> h.category() != null ? h.category() : "Unknown",
+                        Collectors.counting()
+                ));
+
+        return ResponseEntity.ok(Map.of(
+                "totalConsumed",  totalConsumed,
+                "totalDiscarded", totalDiscarded,
+                "wasteRate",      totalConsumed + totalDiscarded > 0
+                        ? (double) totalDiscarded / (totalConsumed + totalDiscarded) : 0.0,
+                "byCategory",     byCategory
+        ));
     }
 
     @Operation(

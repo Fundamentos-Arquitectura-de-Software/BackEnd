@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,7 @@ public class AuthController {
 
     @Operation(
         summary = "Registrar nuevo usuario",
-        description = "Crea una cuenta nueva. Devuelve los datos del usuario y establece una cookie HttpOnly `authToken` con vigencia de 7 días."
+        description = "Crea una cuenta nueva. Devuelve los datos del usuario y establece cookies HttpOnly `authToken` (15 min) y `refreshToken` (7 días)."
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         required = true,
@@ -92,13 +93,14 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRegistrationRequest request,
                                                   HttpServletResponse response) {
         UserResponse resp = accountService.register(request);
-        setAuthCookie(response, resp.getToken());
+        setAccessCookie(response, resp.getToken());
+        setRefreshCookie(response, resp.getRefreshToken());
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     }
 
     @Operation(
         summary = "Iniciar sesión",
-        description = "Autentica al usuario con email y contraseña. Devuelve los datos del usuario y establece la cookie HttpOnly `authToken`."
+        description = "Autentica al usuario con email y contraseña. Devuelve los datos del usuario y establece cookies HttpOnly `authToken` y `refreshToken`."
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         required = true,
@@ -145,25 +147,56 @@ public class AuthController {
     public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request,
                                                HttpServletResponse response) {
         UserResponse resp = accountService.login(request);
-        setAuthCookie(response, resp.getToken());
+        setAccessCookie(response, resp.getToken());
+        setRefreshCookie(response, resp.getRefreshToken());
+        return ResponseEntity.ok(resp);
+    }
+
+    @Operation(
+        summary = "Renovar access token",
+        description = "Genera un nuevo `authToken` usando el `refreshToken` de la cookie. No requiere body."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Token renovado correctamente",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = UserResponse.class)
+            )
+        ),
+        @ApiResponse(responseCode = "401", description = "Refresh token ausente, expirado o revocado",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                examples = @ExampleObject(value = "{\"error\": \"Refresh token inválido\"}")))
+    })
+    @PostMapping("/refresh")
+    public ResponseEntity<UserResponse> refresh(HttpServletRequest request,
+                                                 HttpServletResponse response) {
+        String refreshToken = extractCookie(request, "refreshToken");
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        UserResponse resp = accountService.refresh(refreshToken);
+        setAccessCookie(response, resp.getToken());
+        setRefreshCookie(response, resp.getRefreshToken());
         return ResponseEntity.ok(resp);
     }
 
     @Operation(
         summary = "Cerrar sesión",
-        description = "Invalida la cookie `authToken` eliminándola del navegador. No requiere body."
+        description = "Revoca el refresh token y elimina ambas cookies (`authToken` y `refreshToken`). No requiere body."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Sesión cerrada correctamente — sin cuerpo de respuesta")
     })
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
-        Cookie cookie = new Cookie("authToken", "");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = extractCookie(request, "refreshToken");
+        if (refreshToken != null) {
+            accountService.revokeRefreshToken(refreshToken);
+        }
+        clearCookie(response, "authToken");
+        clearCookie(response, "refreshToken");
         return ResponseEntity.noContent().build();
     }
 
@@ -200,13 +233,42 @@ public class AuthController {
         return ResponseEntity.ok(accountService.getByEmail(email));
     }
 
-    private void setAuthCookie(HttpServletResponse response, String token) {
+    // --- helpers ---
+
+    private void setAccessCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie("authToken", token);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/");
+        cookie.setMaxAge(15 * 60);
+        cookie.setAttribute("SameSite", "None");
+        response.addCookie(cookie);
+    }
+
+    private void setRefreshCookie(HttpServletResponse response, String token) {
+        Cookie cookie = new Cookie("refreshToken", token);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/api/accounts/refresh");
         cookie.setMaxAge(7 * 24 * 60 * 60);
         cookie.setAttribute("SameSite", "None");
         response.addCookie(cookie);
+    }
+
+    private void clearCookie(HttpServletResponse response, String name) {
+        Cookie cookie = new Cookie(name, "");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+
+    private String extractCookie(HttpServletRequest request, String name) {
+        if (request.getCookies() == null) return null;
+        for (Cookie c : request.getCookies()) {
+            if (name.equals(c.getName())) return c.getValue();
+        }
+        return null;
     }
 }

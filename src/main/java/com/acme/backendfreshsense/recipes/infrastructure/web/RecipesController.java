@@ -11,10 +11,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -108,8 +110,33 @@ public class RecipesController {
     }
 
     @Operation(
-        summary = "Crear una receta",
-        description = "Agrega una nueva receta al catálogo. Los valores sugeridos para `level`: `Easy`, `Medium`, `Hard`. " +
+        summary = "US19: Recetas exclusivas para suscriptores premium",
+        description = "Devuelve recetas de nivel avanzado. Requiere rol `USER_PREMIUM` o `ADMIN`."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de recetas premium",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "Acceso denegado — se requiere plan premium",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                examples = @ExampleObject(value = "{\"error\": \"Acceso denegado\"}"))),
+        @ApiResponse(responseCode = "401", description = "Token ausente o inválido",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
+    })
+    @GetMapping("/premium")
+    @PreAuthorize("hasAnyRole('USER_PREMIUM', 'ADMIN')")
+    public ResponseEntity<List<RecipeResponse>> getPremium() {
+        List<RecipeResponse> premium = recipeService.getAll().stream()
+                .filter(r -> "advanced".equalsIgnoreCase(r.getLevel())
+                          || "expert".equalsIgnoreCase(r.getLevel())
+                          || "difícil".equalsIgnoreCase(r.getLevel()))
+                .toList();
+        return ResponseEntity.ok(premium);
+    }
+
+    @Operation(
+        summary = "Crear una receta (solo ADMIN)",
+        description = "Agrega una nueva receta al catálogo. Requiere rol `ADMIN`. Los valores sugeridos para `level`: `Easy`, `Medium`, `Hard`. " +
                       "Para `type`: `Vegetarian`, `Vegan`, `Omnivore`."
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -158,12 +185,16 @@ public class RecipesController {
                 )
             )
         ),
+        @ApiResponse(responseCode = "403", description = "Acceso denegado — se requiere rol ADMIN",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                examples = @ExampleObject(value = "{\"error\": \"Acceso denegado\"}"))),
         @ApiResponse(responseCode = "401", description = "Token ausente o inválido",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
     })
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RecipeResponse> create(@RequestBody CreateRecipeRequest request) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RecipeResponse> create(@Valid @RequestBody CreateRecipeRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(recipeService.create(request));
     }
 }
