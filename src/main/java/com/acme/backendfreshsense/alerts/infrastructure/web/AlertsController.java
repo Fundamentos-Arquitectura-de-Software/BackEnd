@@ -3,6 +3,7 @@ package com.acme.backendfreshsense.alerts.infrastructure.web;
 import com.acme.backendfreshsense.alerts.application.dto.AlertRequest;
 import com.acme.backendfreshsense.alerts.application.dto.AlertResponse;
 import com.acme.backendfreshsense.alerts.application.service.AlertService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class AlertsController {
     }
 
     @PostMapping
-    public AlertResponse create(@RequestBody AlertRequest request) {
+    public AlertResponse create(@Valid @RequestBody AlertRequest request) {
         return service.create(request);
     }
 
