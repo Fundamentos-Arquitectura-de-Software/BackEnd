@@ -5,6 +5,7 @@ import com.acme.backendfreshsense.recipes.application.dto.RecipeResponse;
 import com.acme.backendfreshsense.recipes.application.service.RecipeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +50,7 @@ public class RecipesController {
     @PostMapping(consumes = "application/json")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear receta (solo ADMIN)")
-    public ResponseEntity<RecipeResponse> create(@RequestBody CreateRecipeRequest request) {
+    public ResponseEntity<RecipeResponse> create(@Valid @RequestBody CreateRecipeRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(recipeService.create(request));
     }
 }
