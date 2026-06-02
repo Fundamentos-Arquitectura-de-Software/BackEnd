@@ -80,7 +80,7 @@ public class NotificationController {
     @Operation(summary = "Actualizar preferencias de notificación (US09/US24)")
     public ResponseEntity<NotificationPreference> updatePreferences(
             HttpServletRequest httpRequest,
-            @RequestBody NotificationPreferenceRequest request) {
+            @Valid @RequestBody NotificationPreferenceRequest request) {
         Long userId = extractUserId(httpRequest);
         NotificationPreference updated = new NotificationPreference(userId);
         updated.setInAppEnabled(request.isInAppEnabled());

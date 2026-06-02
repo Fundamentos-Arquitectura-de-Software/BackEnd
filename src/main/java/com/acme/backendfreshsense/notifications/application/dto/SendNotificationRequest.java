@@ -3,6 +3,7 @@ package com.acme.backendfreshsense.notifications.application.dto;
 import com.acme.backendfreshsense.notifications.domain.model.ChannelType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public class SendNotificationRequest {
 
@@ -10,11 +11,14 @@ public class SendNotificationRequest {
     private Long userId;
 
     @NotBlank
+    @Size(max = 100, message = "El título no puede superar los 100 caracteres.")
     private String title;
 
     @NotBlank
+    @Size(max = 500, message = "El mensaje no puede superar los 500 caracteres.")
     private String message;
 
+    @Size(max = 50)
     private String alertType;
 
     private ChannelType channelType; // null = todos los canales activos del usuario
