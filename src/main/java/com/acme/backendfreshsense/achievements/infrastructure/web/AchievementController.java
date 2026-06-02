@@ -3,6 +3,7 @@ package com.acme.backendfreshsense.achievements.infrastructure.web;
 import com.acme.backendfreshsense.achievements.application.dto.AchievementDto;
 import com.acme.backendfreshsense.achievements.application.dto.UpdateAchievementRequest;
 import com.acme.backendfreshsense.achievements.application.service.AchievementService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,15 +35,17 @@ public class AchievementController {
     public AchievementDto update(
             @PathVariable Long userId,
             @PathVariable UUID achievementId,
-            @RequestBody UpdateAchievementRequest req) {
+            @Valid @RequestBody UpdateAchievementRequest req) {
         return service.updateProgress(userId, achievementId, req.completionPercentage());
     }
 
+    /*
     @PatchMapping("/by-name/{name}")
     public AchievementDto updateByName(
             @PathVariable Long userId,
             @PathVariable String name,
-            @RequestBody UpdateAchievementRequest req) {
+            @Valid @RequestBody UpdateAchievementRequest req) {
         return service.updateByName(userId, name, req.completionPercentage());
     }
+     */
 }
