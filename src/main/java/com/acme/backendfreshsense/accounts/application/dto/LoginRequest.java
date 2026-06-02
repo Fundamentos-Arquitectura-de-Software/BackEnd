@@ -1,14 +1,18 @@
 package com.acme.backendfreshsense.accounts.application.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+@Schema(description = "Credenciales para iniciar sesión")
 public class LoginRequest {
 
+    @Schema(description = "Correo electrónico registrado", example = "maria@freshsense.pe", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El email no es válido")
     private String email;
 
+    @Schema(description = "Contraseña del usuario (mín. 8 caracteres, 1 mayúscula, 1 número)", example = "Secret1234", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "La contraseña es obligatoria")
     private String password;
 
