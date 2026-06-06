@@ -2,7 +2,7 @@ package com.acme.backendfreshsense.alerts.infrastructure.web;
 
 import com.acme.backendfreshsense.alerts.application.dto.AlertRequest;
 import com.acme.backendfreshsense.alerts.application.dto.AlertResponse;
-import com.acme.backendfreshsense.alerts.application.service.AlertService;
+import com.acme.backendfreshsense.alerts.infrastructure.feign.AlertsFeignClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,13 +21,10 @@ import java.util.List;
 @Tag(name = "Alerts", description = "Alertas de vencimiento y stock bajo de productos")
 @RestController
 @RequestMapping("/api/alerts")
+@RequiredArgsConstructor
 public class AlertsController {
 
-    private final AlertService service;
-
-    public AlertsController(AlertService service) {
-        this.service = service;
-    }
+    private final AlertsFeignClient alertsFeignClient;
 
     @Operation(
         summary = "Listar todas las alertas",
@@ -69,7 +67,7 @@ public class AlertsController {
     })
     @GetMapping
     public List<AlertResponse> getAll() {
-        return service.getAll();
+        return alertsFeignClient.getAll();
     }
 
     @Operation(
@@ -122,7 +120,7 @@ public class AlertsController {
     })
     @PostMapping
     public AlertResponse create(@Valid @RequestBody AlertRequest request) {
-        return service.create(request);
+        return alertsFeignClient.create(request);
     }
 
     @Operation(
@@ -180,6 +178,6 @@ public class AlertsController {
     public AlertResponse update(
             @Parameter(description = "ID de la alerta a actualizar", example = "3") @PathVariable Long id,
             @Valid @RequestBody AlertRequest request) {
-        return service.update(id, request);
+        return alertsFeignClient.update(id, request);
     }
 }

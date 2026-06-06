@@ -1,6 +1,6 @@
-# FreshSense — Backend
+# FreshSense - Backend
 
-Backend del sistema FreshSense. API REST construida con Spring Boot 3.5.7 y Java 17, siguiendo Domain-Driven Design (DDD) con un monolito modular orientado a migración futura a microservicios.
+API REST del sistema FreshSense construida con Spring Boot 3.5.7 y Java 17, siguiendo Domain-Driven Design (DDD). Arquitectura de monolito modular con microservicios extraidos para `recipes` y `alerts`, coordinados mediante Eureka Server.
 
 ---
 
@@ -24,66 +24,111 @@ Crear la base de datos en MySQL antes de levantar el servidor:
 CREATE DATABASE freshsense_db;
 ```
 
-### 2. Variables de entorno (archivo local)
+### 2. Variables de entorno del monolito
 
-Crear el archivo `src/main/resources/application-local.properties` (no esta en el repositorio, esta en `.gitignore`).
-
-La estructura del archivo es la siguiente:
+Crear el archivo `src/main/resources/application-local.properties` (no esta en el repositorio, en `.gitignore`):
 
 ```properties
-DB_HOST=
-DB_PORT=
-DB_NAME=
-DB_USER=
-DB_PASSWORD=
-JWT_SECRET=
-AES_SECRET=
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=freshsense_db
+DB_USER=root
+DB_PASSWORD=root
+JWT_SECRET=local-dev-secret-key-at-least-32-chars-long
+AES_SECRET=local-aes-secret-key-32chars-pad!
+```
+
+Para OAuth2 Google agregar tambien:
+```properties
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 ```
 
-Los valores de estas variables no se publican en el repositorio por razones de seguridad. Contactar al lider del proyecto para recibirlos de forma privada antes de levantar el entorno local.
+Los valores de OAuth2 no se publican en el repositorio. Contactar al lider del proyecto para recibirlos.
 
-Para obtener las credenciales de Google (`GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`), el lider del proyecto debe crearlas en Google Cloud Console bajo el proyecto de FreshSense y compartirlas junto con las demas variables.
+### 3. Variables de entorno de los microservicios
 
-Las variables de entorno disponibles y sus valores por defecto son:
+Cada microservicio tiene su propio `application-local.properties` en su carpeta `src/main/resources/`:
 
-| Variable             | Descripcion                                      | Default en produccion |
-|----------------------|--------------------------------------------------|-----------------------|
-| `DB_HOST`            | Host de la base de datos                         | —                     |
-| `DB_PORT`            | Puerto de la base de datos                       | —                     |
-| `DB_NAME`            | Nombre de la base de datos                       | —                     |
-| `DB_USER`            | Usuario de MySQL                                 | —                     |
-| `DB_PASSWORD`        | Password de MySQL                                | —                     |
-| `JWT_SECRET`         | Clave para firmar JWT (minimo 32 caracteres)     | —                     |
-| `AES_SECRET`         | Clave AES-256 para cifrado en reposo (32+ chars) | —                     |
-| `JWT_ACCESS_MINUTES`   | Duracion del access token en minutos              | `15`                  |
-| `JWT_REFRESH_DAYS`     | Duracion del refresh token en dias                | `7`                   |
-| `PORT`                 | Puerto HTTP del servidor                          | `8080`                |
-| `GOOGLE_CLIENT_ID`     | Client ID de Google OAuth2                        | —                     |
-| `GOOGLE_CLIENT_SECRET` | Client Secret de Google OAuth2                    | —                     |
-| `FRONTEND_URL`         | URL base del frontend (redirect post-OAuth2)      | `http://localhost:4200` |
+`alerts-service/src/main/resources/application-local.properties`
+`recipes-service/src/main/resources/application-local.properties`
 
-En produccion (Railway, Render, etc.) se usan las variables `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD` que provee la plataforma automaticamente.
+Ambos archivos comparten el mismo formato (solo credenciales de BD, sin JWT ni AES):
+
+```properties
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=freshsense_db
+DB_USER=root
+DB_PASSWORD=root
+```
 
 ---
 
-## Levantar el servidor
+## Variables de entorno disponibles
 
-**Git Bash / Linux / Mac:**
+| Variable               | Descripcion                                      | Default               |
+|------------------------|--------------------------------------------------|-----------------------|
+| `DB_HOST`              | Host de la base de datos                         | —                     |
+| `DB_PORT`              | Puerto de la base de datos                       | —                     |
+| `DB_NAME`              | Nombre de la base de datos                       | —                     |
+| `DB_USER`              | Usuario de MySQL                                 | —                     |
+| `DB_PASSWORD`          | Password de MySQL                                | —                     |
+| `JWT_SECRET`           | Clave para firmar JWT (minimo 32 caracteres)     | —                     |
+| `AES_SECRET`           | Clave AES-256 para cifrado en reposo (32+ chars) | —                     |
+| `JWT_ACCESS_MINUTES`   | Duracion del access token en minutos             | `15`                  |
+| `JWT_REFRESH_DAYS`     | Duracion del refresh token en dias               | `7`                   |
+| `PORT`                 | Puerto HTTP del servidor                         | `8080`                |
+| `GOOGLE_CLIENT_ID`     | Client ID de Google OAuth2                       | —                     |
+| `GOOGLE_CLIENT_SECRET` | Client Secret de Google OAuth2                   | —                     |
+| `FRONTEND_URL`         | URL base del frontend (redirect post-OAuth2)     | `http://localhost:4200` |
+| `EUREKA_URL`           | URL del servidor Eureka                          | `http://localhost:8761/eureka/` |
+
+En produccion (Railway, Render, etc.) se usan `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD` que provee la plataforma automaticamente.
+
+---
+
+## Levantar todos los servicios
+
+Los servicios deben levantarse en este orden. Abrir una terminal por servicio:
+
+### Terminal 1 - Eureka Server (puerto 8761)
+
+```bash
+cd eureka-server
+..\mvnw.cmd spring-boot:run
+```
+
+Esperar hasta ver `Started EurekaServerApplication` antes de continuar.
+
+### Terminal 2 - Recipes Service (puerto 8082)
+
+```bash
+cd recipes-service
+..\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+### Terminal 3 - Alerts Service (puerto 8083)
+
+```bash
+cd alerts-service
+..\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+### Terminal 4 - Monolito principal (puerto 8080)
+
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-**Windows CMD:**
+Windows CMD:
 ```cmd
 mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-**IntelliJ IDEA:**
-Edit Configurations → Active profiles → `local` → Run.
+IntelliJ IDEA: Edit Configurations -> Active profiles -> `local` -> Run.
 
-El servidor inicia en `http://localhost:8080`.
+Panel de Eureka disponible en `http://localhost:8761`. Los tres servicios deben aparecer como `UP`.
 
 ---
 
@@ -103,7 +148,7 @@ http://localhost:8080/v3/api-docs
 
 ---
 
-## OAuth2 — Login con Google
+## OAuth2 - Login con Google
 
 El backend soporta autenticacion via Google OAuth2 ademas del login tradicional con email/password.
 
@@ -111,52 +156,70 @@ El backend soporta autenticacion via Google OAuth2 ademas del login tradicional 
 1. El frontend redirige al usuario a `http://localhost:8080/oauth2/authorization/google`
 2. Google autentica al usuario y redirige de vuelta al backend
 3. El backend crea o recupera el usuario en la BD con rol `USER_STANDARD`
-4. Se emiten las cookies HttpOnly `authToken` y `refreshToken` exactamente igual que en el login tradicional
-5. El usuario es redirigido al frontend en `{FRONTEND_URL}/home`
+4. Se emiten las cookies HttpOnly `authToken` y `refreshToken` igual que en el login tradicional
+5. El usuario es redirigido al frontend en `{FRONTEND_URL}/dashboard`
 
 **Configuracion necesaria en Google Cloud Console:**
-- Crear un proyecto en [Google Cloud Console](https://console.cloud.google.com)
-- Habilitar la API de Google+ o People API
+- Crear un proyecto en Google Cloud Console
+- Habilitar la People API
 - Crear credenciales OAuth2 de tipo "Aplicacion web"
 - Agregar como URI de redireccion autorizado: `http://localhost:8080/login/oauth2/code/google`
-- Copiar el Client ID y Client Secret a las variables de entorno `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`
+- Copiar el Client ID y Client Secret a `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`
 
-**Nota:** Si `GOOGLE_CLIENT_ID` esta vacio, el endpoint OAuth2 no estara disponible pero el resto del sistema funciona normalmente.
+Si `GOOGLE_CLIENT_ID` esta vacio, el endpoint OAuth2 no estara disponible pero el resto del sistema funciona normalmente.
 
 ---
 
-## Modulos
+## Arquitectura de microservicios
 
-La aplicacion esta organizada en bounded contexts. Cada modulo sigue la misma estructura de capas:
+El sistema utiliza Spring Cloud Netflix Eureka para service discovery y Spring Cloud OpenFeign para comunicacion entre servicios.
+
+```
+eureka-server/      # Registro de servicios (puerto 8761)
+recipes-service/    # Microservicio de recetas (puerto 8082)
+alerts-service/     # Microservicio de alertas (puerto 8083)
+src/                # Monolito principal (puerto 8080)
+```
+
+El monolito actua como API Gateway: expone los controladores REST, aplica seguridad JWT y delega la logica de negocio de recetas y alertas a los microservicios via Feign Client usando Eureka para resolver las direcciones.
+
+La seguridad (JWT, roles, RBAC) se aplica unicamente en el monolito. Los microservicios no tienen Spring Security.
+
+---
+
+## Modulos del monolito
+
+Cada modulo sigue la misma estructura de capas DDD:
 
 ```
 {modulo}/
 ├── application/
-│   ├── dto/        # DTOs de entrada y salida
-│   ├── mapper/     # Mappers entidad <-> DTO
-│   └── service/    # Logica de negocio
+│   ├── dto/         # DTOs de entrada y salida
+│   ├── mapper/      # Mappers entidad <-> DTO
+│   └── service/     # Logica de negocio
 ├── domain/
-│   ├── model/      # Entidades de dominio (POJOs)
-│   └── repository/ # Interfaces de repositorio
+│   ├── model/       # Entidades de dominio (POJOs)
+│   └── repository/  # Interfaces de repositorio
 └── infrastructure/
     ├── persistence/ # Entidades JPA, adapters, configuracion
+    ├── feign/       # Clientes Feign (solo en modulos delegados a microservicios)
     └── web/         # Controladores REST
 ```
 
 ### Endpoints por modulo
 
-| Modulo          | Base URL                           | Descripcion                                      |
-|-----------------|------------------------------------|--------------------------------------------------|
-| `accounts`      | `/api/accounts`                    | Registro, login, logout, refresh token, perfil  |
-| `inventory`     | `/api/products`                    | CRUD de productos en inventario                  |
-| `alerts`        | `/api/alerts`                      | Alertas por vencimiento o stock bajo             |
-| `monitoring`    | `/api/monitoring`                  | Registro de lecturas de sensores IoT             |
-| `recipes`       | `/api/recipes`                     | Recetas sugeridas; `/premium` requiere suscripcion |
+| Modulo          | Base URL                           | Descripcion                                       |
+|-----------------|------------------------------------|---------------------------------------------------|
+| `accounts`      | `/api/accounts`                    | Registro, login, logout, refresh token, perfil   |
+| `inventory`     | `/api/products`                    | CRUD de productos en inventario                   |
+| `alerts`        | `/api/alerts`                      | Alertas (delegado a alerts-service via Feign)     |
+| `monitoring`    | `/api/monitoring`                  | Registro de lecturas de sensores IoT              |
+| `recipes`       | `/api/recipes`                     | Recetas (delegado a recipes-service via Feign)    |
 | `reports`       | `/api/history`                     | Historial de consumo; `/advanced` requiere premium |
-| `billing`       | `/api/billing`                     | Planes y suscripciones                           |
-| `notifications` | `/api/notifications`               | Bandeja in-app, preferencias, envio (solo ADMIN) |
-| `achievements`  | `/api/users/{userId}/achievements` | Logros y gamificacion por usuario                |
-| `challenges`    | `/api/challenges`                  | Retos, enroll y leaderboard                      |
+| `billing`       | `/api/billing`                     | Planes y suscripciones                            |
+| `notifications` | `/api/notifications`               | Bandeja in-app, preferencias, envio (solo ADMIN)  |
+| `achievements`  | `/api/users/{userId}/achievements` | Logros y gamificacion por usuario                 |
+| `challenges`    | `/api/challenges`                  | Retos, enroll y leaderboard                       |
 
 ---
 
@@ -164,19 +227,19 @@ La aplicacion esta organizada en bounded contexts. Cada modulo sigue la misma es
 
 ### Autenticacion
 
-- JWT stateless. El token viaja en cookie HttpOnly `authToken` (preferido) o en el header `Authorization: Bearer <token>`.
+- JWT stateless. El token viaja en cookie HttpOnly `authToken` (preferido) o en header `Authorization: Bearer <token>`.
 - Al hacer login o registro se setean dos cookies:
-  - `authToken` — access token, expira en 15 minutos.
-  - `refreshToken` — refresh token, expira en 7 dias, path `/api/accounts/refresh`.
-- El endpoint `POST /api/accounts/refresh` renueva el access token sin necesidad de re-autenticacion.
+  - `authToken` - access token, expira en 15 minutos.
+  - `refreshToken` - refresh token, expira en 7 dias, path `/api/accounts/refresh`.
+- `POST /api/accounts/refresh` renueva el access token sin re-autenticacion.
 
 ### Roles
 
-| Rol            | Descripcion                                                           |
-|----------------|-----------------------------------------------------------------------|
-| `USER_FREE`    | Usuario registrado sin suscripcion activa                             |
-| `USER_PREMIUM` | Usuario con suscripcion activa; accede a analytics y recetas premium  |
-| `ADMIN`        | Administrador; puede crear recetas y enviar notificaciones            |
+| Rol              | Descripcion                                                          |
+|------------------|----------------------------------------------------------------------|
+| `USER_STANDARD`  | Usuario registrado sin suscripcion activa                            |
+| `USER_PREMIUM`   | Usuario con suscripcion activa; accede a analytics y recetas premium |
+| `ADMIN`          | Administrador; puede crear recetas y enviar notificaciones           |
 
 El rol se actualiza automaticamente mediante eventos de dominio cuando el usuario activa o cancela una suscripcion.
 
@@ -192,7 +255,7 @@ El rol se actualiza automaticamente mediante eventos de dominio cuando el usuari
 
 ### Cifrado en reposo
 
-El campo `paymentReference` en suscripciones esta cifrado con AES-256-GCM mediante un `JPA AttributeConverter`. La clave se configura con la variable `AES_SECRET`.
+El campo `paymentReference` en suscripciones esta cifrado con AES-256-GCM mediante un `JPA AttributeConverter`. La clave se configura con `AES_SECRET`.
 
 ### Rate limiting
 
@@ -202,32 +265,30 @@ Se aplica rate limiting en los endpoints de autenticacion mediante Bucket4j para
 
 ## Eventos de dominio
 
-Los modulos se comunican de forma desacoplada mediante `Spring ApplicationEventPublisher`. Eventos implementados:
+Los modulos se comunican de forma desacoplada mediante `Spring ApplicationEventPublisher`:
 
-| Evento                        | Publicado por | Consumido por     | Efecto                              |
-|-------------------------------|---------------|-------------------|-------------------------------------|
-| `UserRegisteredEvent`         | `accounts`    | —                 | Log / extension futura              |
-| `UserRoleChangedEvent`        | `accounts`    | —                 | Auditoria de cambios de rol         |
-| `SubscriptionActivatedEvent`  | `billing`     | `accounts` (RoleService) | Upgrade a `USER_PREMIUM`   |
-| `SubscriptionCancelledEvent`  | `billing`     | `accounts` (RoleService) | Downgrade a `USER_FREE`    |
-| `ExpirationAlertRaisedEvent`  | `alerts`      | `notifications`   | Envia notificacion in-app al usuario |
+| Evento                        | Publicado por | Consumido por            | Efecto                               |
+|-------------------------------|---------------|--------------------------|--------------------------------------|
+| `UserRegisteredEvent`         | `accounts`    | —                        | Log / extension futura               |
+| `UserRoleChangedEvent`        | `accounts`    | —                        | Auditoria de cambios de rol          |
+| `SubscriptionActivatedEvent`  | `billing`     | `accounts` (RoleService) | Upgrade a `USER_PREMIUM`             |
+| `SubscriptionCancelledEvent`  | `billing`     | `accounts` (RoleService) | Downgrade a `USER_STANDARD`          |
+| `ExpirationAlertRaisedEvent`  | `alerts`      | `notifications`          | Envia notificacion in-app al usuario |
 
 ---
 
 ## Comandos utiles
 
 ```bash
-# Compilar sin ejecutar tests
+# Monolito principal
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ./mvnw clean package -DskipTests
-
-# Ejecutar tests
 ./mvnw test
 
-# Build de produccion
-./mvnw clean package
-
-# Limpiar target
-./mvnw clean
+# Desde subcarpetas de microservicios
+cd eureka-server  && ..\mvnw.cmd spring-boot:run
+cd recipes-service && ..\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
+cd alerts-service  && ..\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
 ---
@@ -235,16 +296,19 @@ Los modulos se comunican de forma desacoplada mediante `Spring ApplicationEventP
 ## Estructura de archivos relevantes
 
 ```
-src/main/resources/
-├── application.properties            # Configuracion base (variables de entorno)
-└── application-local.properties      # Configuracion local (NO commitear, en .gitignore)
-
-src/main/java/com/acme/backendfreshsense/
-├── BackendFreshSenseApplication.java # Entry point
-├── shared/
-│   ├── infrastructure/security/      # JwtService, JwtAuthFilter, SecurityConfig, RateLimitFilter
-│   └── infrastructure/crypto/        # AES256Converter
-└── shared/domain/event/              # Clases base de eventos de dominio
+BackEnd/
+├── eureka-server/                        # Servidor Eureka (Spring Cloud 2023.0.3)
+├── recipes-service/                      # Microservicio de recetas (puerto 8082)
+├── alerts-service/                       # Microservicio de alertas (puerto 8083)
+└── src/main/
+    ├── resources/
+    │   ├── application.properties        # Configuracion base
+    │   └── application-local.properties  # Configuracion local (NO commitear)
+    └── java/com/acme/backendfreshsense/
+        ├── BackendFreshSenseApplication.java  # Entry point
+        ├── shared/infrastructure/security/    # JwtService, JwtAuthFilter, SecurityConfig
+        ├── shared/infrastructure/crypto/      # AES256Converter
+        └── shared/domain/event/               # Clases base de eventos de dominio
 ```
 
 ---
@@ -253,8 +317,9 @@ src/main/java/com/acme/backendfreshsense/
 
 La aplicacion esta preparada para despliegue en plataformas PaaS (Railway, Render, Heroku).
 
-1. Configurar las variables de entorno en la plataforma (ver tabla de variables arriba).
-2. La plataforma debe proveer una instancia MySQL 8.0 con las variables `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD`.
+1. Configurar las variables de entorno en la plataforma (ver tabla arriba).
+2. La plataforma debe proveer una instancia MySQL 8.0 con `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD`.
 3. Hibernate creara y actualizara el schema automaticamente (`ddl-auto=update`).
-4. Los planes de billing (Basic, Premium) se seedean automaticamente al primer arranque si la tabla `plans` esta vacia.
+4. Los planes de billing se seedean automaticamente al primer arranque si la tabla `plans` esta vacia.
 5. Asegurarse de que `JWT_SECRET` y `AES_SECRET` tengan al menos 32 caracteres y sean valores aleatorios seguros.
+6. Para microservicios en produccion, configurar `EUREKA_URL` apuntando al servidor Eureka desplegado.

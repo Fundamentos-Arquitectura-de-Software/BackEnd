@@ -2,7 +2,7 @@ package com.acme.backendfreshsense.recipes.infrastructure.web;
 
 import com.acme.backendfreshsense.recipes.application.dto.CreateRecipeRequest;
 import com.acme.backendfreshsense.recipes.application.dto.RecipeResponse;
-import com.acme.backendfreshsense.recipes.application.service.RecipeService;
+import com.acme.backendfreshsense.recipes.infrastructure.feign.RecipesFeignClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,7 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecipesController {
 
-    private final RecipeService recipeService;
+    private final RecipesFeignClient recipesFeignClient;
 
     @Operation(
         summary = "Listar todas las recetas",
@@ -65,7 +65,7 @@ public class RecipesController {
     })
     @GetMapping
     public List<RecipeResponse> getAll() {
-        return recipeService.getAll();
+        return recipesFeignClient.getAll();
     }
 
     @Operation(
@@ -106,7 +106,7 @@ public class RecipesController {
     @GetMapping("/{id}")
     public ResponseEntity<RecipeResponse> getById(
             @Parameter(description = "ID de la receta", example = "1") @PathVariable Long id) {
-        return ResponseEntity.ok(recipeService.getById(id));
+        return recipesFeignClient.getById(id);
     }
 
     @Operation(
@@ -126,12 +126,7 @@ public class RecipesController {
     @GetMapping("/premium")
     @PreAuthorize("hasAnyRole('USER_PREMIUM', 'ADMIN')")
     public ResponseEntity<List<RecipeResponse>> getPremium() {
-        List<RecipeResponse> premium = recipeService.getAll().stream()
-                .filter(r -> "advanced".equalsIgnoreCase(r.getLevel())
-                          || "expert".equalsIgnoreCase(r.getLevel())
-                          || "difícil".equalsIgnoreCase(r.getLevel()))
-                .toList();
-        return ResponseEntity.ok(premium);
+        return recipesFeignClient.getPremium();
     }
 
     @Operation(
@@ -195,6 +190,6 @@ public class RecipesController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RecipeResponse> create(@Valid @RequestBody CreateRecipeRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(recipeService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(recipesFeignClient.create(request));
     }
 }
