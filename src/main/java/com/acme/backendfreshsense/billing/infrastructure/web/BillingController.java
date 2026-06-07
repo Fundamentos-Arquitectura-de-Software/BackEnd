@@ -10,9 +10,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -69,6 +71,8 @@ public class BillingController {
             String header = request.getHeader("Authorization");
             if (header != null && header.startsWith("Bearer ")) token = header.substring(7);
         }
-        return token != null ? jwtService.extractUserId(token) : null;
+        Long userId = token != null ? jwtService.extractUserId(token) : null;
+        if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token requerido");
+        return userId;
     }
 }

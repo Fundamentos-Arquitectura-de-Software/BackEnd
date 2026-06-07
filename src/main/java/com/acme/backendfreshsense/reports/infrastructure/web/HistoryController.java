@@ -113,8 +113,8 @@ public class HistoryController {
     public ResponseEntity<Map<String, Object>> getAdvancedAnalytics() {
         List<HistoryResponseDto> all = service.getAll();
 
-        long totalConsumed  = all.stream().filter(h -> "CONSUME".equalsIgnoreCase(h.action())).count();
-        long totalDiscarded = all.stream().filter(h -> "DISCARD".equalsIgnoreCase(h.action())).count();
+        long totalConsumed  = all.stream().filter(h -> "CONSUMED".equalsIgnoreCase(h.action())).count();
+        long totalDiscarded = all.stream().filter(h -> "DISCARDED".equalsIgnoreCase(h.action())).count();
 
         Map<String, Long> byCategory = all.stream()
                 .collect(Collectors.groupingBy(

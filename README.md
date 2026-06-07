@@ -371,13 +371,56 @@ BackEnd/
 
 ---
 
-## Despliegue en produccion
+## Despliegue en produccion (Azure)
 
-La aplicacion esta preparada para despliegue en plataformas PaaS (Railway, Render, Heroku).
+La infraestructura de produccion corre en **Azure Container Apps** con imagen en **Azure Container Registry**.
 
-1. Configurar todas las variables de entorno en la plataforma (ver tabla de variables).
-2. La plataforma debe proveer una instancia MySQL 8.0. Las variables `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD` son usadas automaticamente si estan presentes.
-3. Hibernate crea y actualiza el schema automaticamente (`ddl-auto=update`).
-4. Los planes de billing se seedean automaticamente al primer arranque si la tabla `plans` esta vacia.
-5. `JWT_SECRET` y `AES_SECRET` deben tener minimo 32 caracteres y ser valores aleatorios seguros — nunca usar los mismos valores de desarrollo en produccion.
-6. Para microservicios en produccion, configurar `EUREKA_URL` apuntando al servidor Eureka desplegado.
+### URLs de produccion
+
+| Servicio | URL |
+|----------|-----|
+| API REST (monolito) | `https://freshsense-backend.mangoground-03a86fb8.eastus.azurecontainerapps.io` |
+| Swagger UI | `https://freshsense-backend.mangoground-03a86fb8.eastus.azurecontainerapps.io/swagger-ui/index.html` |
+| Eureka Server | interno (`http://eureka-server`) — sin ingress externo |
+| Alerts Service | interno — solo accesible via Feign desde el monolito |
+| Recipes Service | interno — solo accesible via Feign desde el monolito |
+
+### Infraestructura Azure
+
+| Recurso | Nombre |
+|---------|--------|
+| Resource Group | `freshsense-rg` |
+| Container Registry | `freshsenseacr.azurecr.io` |
+| Container Apps Environment | `freshsense-env` (East US) |
+| Container App (monolito) | `freshsense-backend` |
+| Container App (eureka) | `eureka-server` |
+| Container App (alerts) | `alerts-service` |
+| Container App (recipes) | `recipes-service` |
+
+### Base de datos en produccion
+
+**TiDB Cloud Serverless** (MySQL-compatible). Las tres bases de datos estan creadas:
+- `freshsense_db` — monolito principal
+- `alerts_db` — alerts-service
+- `recipes_db` — recipes-service
+
+Credenciales en poder del lider del proyecto (Fabricio) — NO commitear.
+
+### CI/CD
+
+**GitHub Actions** configurado automaticamente via Azure Portal (Continuous Deployment).
+
+- Workflow: `.github/workflows/freshsense-backend-AutoDeployTrigger-*.yml`
+- Cada push a `main` compila la imagen Docker, la sube a `freshsenseacr.azurecr.io` y despliega una nueva revision en `freshsense-backend`.
+- Autenticacion con Azure via **User-Assigned Managed Identity** (sin Service Principal).
+
+### Variables de entorno en produccion
+
+Configuradas directamente en cada Container App via Azure Portal o CLI. Las variables sensibles (`JWT_SECRET`, `AES_SECRET`, credenciales TiDB, Google OAuth2) estan en Azure Container Apps secrets — solicitarlas a Fabricio.
+
+### Notas de arquitectura en produccion
+
+- Eureka: los microservicios se registran usando `EUREKA_INSTANCE_HOSTNAME=<nombre-del-servicio>` y el monolito los descubre via DNS interno de Container Apps (`http://eureka-server`).
+- Google OAuth2 redirect URI registrado en Google Cloud Console para produccion: `https://freshsense-backend.mangoground-03a86fb8.eastus.azurecontainerapps.io/login/oauth2/code/google`
+- CORS configurado en `SecurityConfig.java` para aceptar requests desde el frontend de produccion y localhost:4200.
+- TiDB requiere TLS: la JDBC URL usa `sslMode=VERIFY_IDENTITY&enabledTLSProtocols=TLSv1.2,TLSv1.3`.
