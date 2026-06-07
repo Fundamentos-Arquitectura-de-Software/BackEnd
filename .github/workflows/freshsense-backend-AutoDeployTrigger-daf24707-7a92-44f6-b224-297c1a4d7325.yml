@@ -35,15 +35,12 @@ jobs:
         uses: azure/container-apps-deploy-action@v2
         with:
           appSourcePath: ${{ github.workspace }}
-          _dockerfilePathKey_: _dockerfilePath_
-          _targetLabelKey_: _targetLabel_
+          dockerfilePath: ./Dockerfile
           registryUrl: freshsenseacr.azurecr.io
           registryUsername: ${{ secrets.FRESHSENSEBACKEND_REGISTRY_USERNAME }}
           registryPassword: ${{ secrets.FRESHSENSEBACKEND_REGISTRY_PASSWORD }}
           containerAppName: freshsense-backend
           resourceGroup: freshsense-rg
           imageToBuild: freshsenseacr.azurecr.io/freshsense-backend:${{ github.sha }}
-          _buildArgumentsKey_: |
-            _buildArgumentsValues_
 
 
