@@ -77,6 +77,7 @@ public class SecurityConfig {
 
         config.setAllowedOrigins(List.of(
                 "https://front-end-fresh-sense.vercel.app",
+                "https://proud-rock-06bc9ad10.7.azurestaticapps.net",
                 "http://localhost:4200"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
