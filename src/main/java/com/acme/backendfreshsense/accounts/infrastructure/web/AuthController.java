@@ -195,8 +195,8 @@ public class AuthController {
         if (refreshToken != null) {
             accountService.revokeRefreshToken(refreshToken);
         }
-        clearCookie(response, "authToken");
-        clearCookie(response, "refreshToken");
+        clearCookie(response, "authToken", "/");
+        clearCookie(response, "refreshToken", "/api/accounts/refresh");
         return ResponseEntity.noContent().build();
     }
 
@@ -255,11 +255,12 @@ public class AuthController {
         response.addCookie(cookie);
     }
 
-    private void clearCookie(HttpServletResponse response, String name) {
+    private void clearCookie(HttpServletResponse response, String name, String path) {
         Cookie cookie = new Cookie(name, "");
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
-        cookie.setPath("/");
+        cookie.setAttribute("SameSite", "None");
+        cookie.setPath(path);
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }

@@ -5,10 +5,11 @@ import java.time.LocalDateTime;
 public class History {
 
     private Long id;
+    private Long userId;
     private Long productId;
     private String productName;
     private String category;
-    private String action;   // "consume" | "discard" | "add"
+    private String action;   // "CONSUMED" | "DISCARDED"
     private Integer quantity;
     private LocalDateTime date;
 
@@ -16,6 +17,7 @@ public class History {
     }
 
     public History(Long id,
+                   Long userId,
                    Long productId,
                    String productName,
                    String category,
@@ -23,6 +25,7 @@ public class History {
                    Integer quantity,
                    LocalDateTime date) {
         this.id = id;
+        this.userId = userId;
         this.productId = productId;
         this.productName = productName;
         this.category = category;
@@ -34,6 +37,10 @@ public class History {
     // ====== GETTERS ======
     public Long getId() {
         return id;
+    }
+
+    public Long getUserId() {
+        return userId;
     }
 
     public Long getProductId() {
@@ -63,6 +70,10 @@ public class History {
     // ====== SETTERS ======
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public void setProductId(Long productId) {

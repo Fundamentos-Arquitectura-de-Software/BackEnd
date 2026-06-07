@@ -17,8 +17,9 @@ public class MonitoringService {
 
     private final MonitoringReadingRepository repository;
 
-    public MonitoringReadingDto save(MonitoringReadingRequest request) {
+    public MonitoringReadingDto save(Long userId, MonitoringReadingRequest request) {
         MonitoringReading reading = MonitoringReading.builder()
+                .userId(userId)
                 .temperature(request.temperature())
                 .humidity(request.humidity())
                 .ethyleneLevel(request.ethyleneLevel())
@@ -34,8 +35,16 @@ public class MonitoringService {
         return repository.findLatest().map(this::toDto);
     }
 
+    public Optional<MonitoringReadingDto> getLatestByUser(Long userId) {
+        return repository.findLatestByUser(userId).map(this::toDto);
+    }
+
     public List<MonitoringReadingDto> getAll() {
         return repository.findAll().stream().map(this::toDto).toList();
+    }
+
+    public List<MonitoringReadingDto> getAllByUser(Long userId) {
+        return repository.findByUserId(userId).stream().map(this::toDto).toList();
     }
 
     private MonitoringReadingDto toDto(MonitoringReading r) {

@@ -3,6 +3,7 @@ package com.acme.backendfreshsense.reports.infrastructure.web;
 import com.acme.backendfreshsense.reports.application.dto.HistoryCreateRequestDto;
 import com.acme.backendfreshsense.reports.application.dto.HistoryResponseDto;
 import com.acme.backendfreshsense.reports.application.service.HistoryService;
+import com.acme.backendfreshsense.shared.infrastructure.security.JwtService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -10,11 +11,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -26,9 +31,11 @@ import java.util.stream.Collectors;
 public class HistoryController {
 
     private final HistoryService service;
+    private final JwtService jwtService;
 
-    public HistoryController(HistoryService service) {
+    public HistoryController(HistoryService service, JwtService jwtService) {
         this.service = service;
+        this.jwtService = jwtService;
     }
 
     @Operation(
@@ -72,8 +79,9 @@ public class HistoryController {
                 examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
     })
     @GetMapping
-    public List<HistoryResponseDto> getAll() {
-        return service.getAll();
+    public List<HistoryResponseDto> getAll(HttpServletRequest httpRequest) {
+        Long userId = extractUserId(httpRequest);
+        return service.getAllByUser(userId);
     }
 
     @Operation(
@@ -110,8 +118,9 @@ public class HistoryController {
     })
     @GetMapping("/advanced")
     @PreAuthorize("hasAnyRole('USER_PREMIUM', 'ADMIN')")
-    public ResponseEntity<Map<String, Object>> getAdvancedAnalytics() {
-        List<HistoryResponseDto> all = service.getAll();
+    public ResponseEntity<Map<String, Object>> getAdvancedAnalytics(HttpServletRequest httpRequest) {
+        Long userId = extractUserId(httpRequest);
+        List<HistoryResponseDto> all = service.getAllByUser(userId);
 
         long totalConsumed  = all.stream().filter(h -> "CONSUMED".equalsIgnoreCase(h.action())).count();
         long totalDiscarded = all.stream().filter(h -> "DISCARDED".equalsIgnoreCase(h.action())).count();
@@ -201,7 +210,25 @@ public class HistoryController {
                 examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
     })
     @PostMapping
-    public HistoryResponseDto create(@Valid @RequestBody HistoryCreateRequestDto dto) {
-        return service.create(dto);
+    public HistoryResponseDto create(HttpServletRequest httpRequest,
+                                     @Valid @RequestBody HistoryCreateRequestDto dto) {
+        Long userId = extractUserId(httpRequest);
+        return service.create(userId, dto);
+    }
+
+    private Long extractUserId(HttpServletRequest request) {
+        String token = null;
+        if (request.getCookies() != null) {
+            for (Cookie c : request.getCookies()) {
+                if ("authToken".equals(c.getName())) { token = c.getValue(); break; }
+            }
+        }
+        if (token == null) {
+            String header = request.getHeader("Authorization");
+            if (header != null && header.startsWith("Bearer ")) token = header.substring(7);
+        }
+        Long userId = token != null ? jwtService.extractUserId(token) : null;
+        if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token requerido");
+        return userId;
     }
 }

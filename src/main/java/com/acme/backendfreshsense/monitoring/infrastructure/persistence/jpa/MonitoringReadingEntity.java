@@ -38,4 +38,7 @@ public class MonitoringReadingEntity {
 
     @Column(name = "recorded_at", nullable = false)
     private LocalDateTime recordedAt;
+
+    @Column(name = "user_id")
+    private Long userId;
 }

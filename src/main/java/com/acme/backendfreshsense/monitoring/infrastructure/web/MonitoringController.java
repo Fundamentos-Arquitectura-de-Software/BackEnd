@@ -3,6 +3,7 @@ package com.acme.backendfreshsense.monitoring.infrastructure.web;
 import com.acme.backendfreshsense.monitoring.application.dto.MonitoringReadingDto;
 import com.acme.backendfreshsense.monitoring.application.dto.MonitoringReadingRequest;
 import com.acme.backendfreshsense.monitoring.application.service.MonitoringService;
+import com.acme.backendfreshsense.shared.infrastructure.security.JwtService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -10,12 +11,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -26,6 +30,7 @@ import java.util.List;
 public class MonitoringController {
 
     private final MonitoringService monitoringService;
+    private final JwtService jwtService;
 
     @Operation(
         summary = "Registrar lectura de sensor",
@@ -87,8 +92,10 @@ public class MonitoringController {
                 examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
     })
     @PostMapping
-    public ResponseEntity<MonitoringReadingDto> create(@Valid @RequestBody MonitoringReadingRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(monitoringService.save(request));
+    public ResponseEntity<MonitoringReadingDto> create(HttpServletRequest httpRequest,
+                                                        @Valid @RequestBody MonitoringReadingRequest request) {
+        Long userId = extractUserId(httpRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(monitoringService.save(userId, request));
     }
 
     @Operation(
@@ -123,8 +130,9 @@ public class MonitoringController {
                 examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
     })
     @GetMapping("/latest")
-    public ResponseEntity<MonitoringReadingDto> getLatest() {
-        return monitoringService.getLatest()
+    public ResponseEntity<MonitoringReadingDto> getLatest(HttpServletRequest httpRequest) {
+        Long userId = extractUserId(httpRequest);
+        return monitoringService.getLatestByUser(userId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.noContent().build());
     }
@@ -171,7 +179,24 @@ public class MonitoringController {
                 examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
     })
     @GetMapping
-    public List<MonitoringReadingDto> getAll() {
-        return monitoringService.getAll();
+    public List<MonitoringReadingDto> getAll(HttpServletRequest httpRequest) {
+        Long userId = extractUserId(httpRequest);
+        return monitoringService.getAllByUser(userId);
+    }
+
+    private Long extractUserId(HttpServletRequest request) {
+        String token = null;
+        if (request.getCookies() != null) {
+            for (Cookie c : request.getCookies()) {
+                if ("authToken".equals(c.getName())) { token = c.getValue(); break; }
+            }
+        }
+        if (token == null) {
+            String header = request.getHeader("Authorization");
+            if (header != null && header.startsWith("Bearer ")) token = header.substring(7);
+        }
+        Long userId = token != null ? jwtService.extractUserId(token) : null;
+        if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token requerido");
+        return userId;
     }
 }

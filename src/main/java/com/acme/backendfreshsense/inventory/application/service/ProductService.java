@@ -17,8 +17,9 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    public ProductResponse create(ProductRequest request) {
+    public ProductResponse create(Long userId, ProductRequest request) {
         Product product = Product.builder()
+                .userId(userId)
                 .name(request.name())
                 .description(request.description())
                 .category(request.category())
@@ -28,8 +29,11 @@ public class ProductService {
         return map(productRepository.save(product));
     }
 
-    public List<ProductResponse> getAll() {
-        return productRepository.findAll().stream().map(this::map).toList();
+    public List<ProductResponse> getAll(Long userId) {
+        return productRepository.findAll().stream()
+                .filter(p -> userId.equals(p.getUserId()))
+                .map(this::map)
+                .toList();
     }
 
     public ProductResponse update(Long id, UpdateProductRequest request) {

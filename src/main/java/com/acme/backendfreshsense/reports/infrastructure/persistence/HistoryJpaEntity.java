@@ -28,6 +28,9 @@ public class HistoryJpaEntity {
     @Column(nullable = false)
     private LocalDateTime date;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     public HistoryJpaEntity() {
     }
 

@@ -29,7 +29,7 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
 
     @Override
     public void cancelByUserId(Long userId) {
-        jpa.cancelActiveByUserId(userId);
+        jpa.cancelActiveByUserId(userId, SubscriptionStatus.ACTIVE, SubscriptionStatus.CANCELLED);
     }
 
     private Subscription toDomain(SubscriptionEntity e) {

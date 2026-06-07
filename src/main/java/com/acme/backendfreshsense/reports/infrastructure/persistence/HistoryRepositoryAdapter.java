@@ -21,6 +21,14 @@ public class HistoryRepositoryAdapter implements HistoryRepository {
     }
 
     @Override
+    public List<History> findByUserId(Long userId) {
+        return jpaRepository.findByUserId(userId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public History save(History history) {
         HistoryJpaEntity entity = toEntity(history);
         HistoryJpaEntity saved = jpaRepository.save(entity);
@@ -30,6 +38,7 @@ public class HistoryRepositoryAdapter implements HistoryRepository {
     private History toDomain(HistoryJpaEntity e) {
         History h = new History();
         h.setId(e.getId());
+        h.setUserId(e.getUserId());
         h.setProductId(e.getProductId());
         h.setProductName(e.getProductName());
         h.setCategory(e.getCategory());
@@ -42,6 +51,7 @@ public class HistoryRepositoryAdapter implements HistoryRepository {
     private HistoryJpaEntity toEntity(History h) {
         HistoryJpaEntity e = new HistoryJpaEntity();
         e.setId(h.getId());
+        e.setUserId(h.getUserId());
         e.setProductId(h.getProductId());
         e.setProductName(h.getProductName());
         e.setCategory(h.getCategory());

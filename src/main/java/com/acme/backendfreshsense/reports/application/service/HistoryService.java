@@ -25,9 +25,17 @@ public class HistoryService {
                 .toList();
     }
 
-    public HistoryResponseDto create(HistoryCreateRequestDto dto) {
+    public List<HistoryResponseDto> getAllByUser(Long userId) {
+        return repository.findByUserId(userId)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    public HistoryResponseDto create(Long userId, HistoryCreateRequestDto dto) {
         History history = new History(
                 null,
+                userId,
                 dto.productId(),
                 dto.productName(),
                 dto.category(),

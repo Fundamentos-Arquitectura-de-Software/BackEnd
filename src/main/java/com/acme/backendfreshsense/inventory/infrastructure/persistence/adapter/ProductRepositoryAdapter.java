@@ -19,6 +19,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
     private static Product toDomain(ProductEntity e) {
         return Product.builder()
                 .id(e.getId())
+                .userId(e.getUserId())
                 .name(e.getName())
                 .description(e.getDescription())
                 .category(e.getCategory())
@@ -30,6 +31,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
     private static ProductEntity toEntity(Product p) {
         return ProductEntity.builder()
                 .id(p.getId())
+                .userId(p.getUserId())
                 .name(p.getName())
                 .description(p.getDescription())
                 .category(p.getCategory())
