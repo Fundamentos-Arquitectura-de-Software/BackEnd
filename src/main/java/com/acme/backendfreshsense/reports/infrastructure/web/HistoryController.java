@@ -3,6 +3,7 @@ package com.acme.backendfreshsense.reports.infrastructure.web;
 import com.acme.backendfreshsense.reports.application.dto.HistoryCreateRequestDto;
 import com.acme.backendfreshsense.reports.application.dto.HistoryResponseDto;
 import com.acme.backendfreshsense.reports.application.service.HistoryService;
+import com.acme.backendfreshsense.shared.infrastructure.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -73,7 +74,7 @@ public class HistoryController {
     })
     @GetMapping
     public List<HistoryResponseDto> getAll() {
-        return service.getAll();
+        return service.getAllByUser(CurrentUser.id());
     }
 
     @Operation(
@@ -111,10 +112,10 @@ public class HistoryController {
     @GetMapping("/advanced")
     @PreAuthorize("hasAnyRole('USER_PREMIUM', 'ADMIN')")
     public ResponseEntity<Map<String, Object>> getAdvancedAnalytics() {
-        List<HistoryResponseDto> all = service.getAll();
+        List<HistoryResponseDto> all = service.getAllByUser(CurrentUser.id());
 
-        long totalConsumed  = all.stream().filter(h -> "CONSUME".equalsIgnoreCase(h.action())).count();
-        long totalDiscarded = all.stream().filter(h -> "DISCARD".equalsIgnoreCase(h.action())).count();
+        long totalConsumed  = all.stream().filter(h -> "CONSUMED".equalsIgnoreCase(h.action())).count();
+        long totalDiscarded = all.stream().filter(h -> "DISCARDED".equalsIgnoreCase(h.action())).count();
 
         Map<String, Long> byCategory = all.stream()
                 .collect(Collectors.groupingBy(
@@ -202,6 +203,6 @@ public class HistoryController {
     })
     @PostMapping
     public HistoryResponseDto create(@Valid @RequestBody HistoryCreateRequestDto dto) {
-        return service.create(dto);
+        return service.create(CurrentUser.id(), dto);
     }
 }

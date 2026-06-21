@@ -8,5 +8,7 @@ public interface HistoryRepository {
 
     List<History> findAll();
 
+    List<History> findByUserId(Long userId);
+
     History save(History history);
 }

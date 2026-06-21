@@ -18,16 +18,17 @@ public class HistoryService {
         this.repository = repository;
     }
 
-    public List<HistoryResponseDto> getAll() {
-        return repository.findAll()
+    public List<HistoryResponseDto> getAllByUser(Long userId) {
+        return repository.findByUserId(userId)
                 .stream()
                 .map(this::toDto)
                 .toList();
     }
 
-    public HistoryResponseDto create(HistoryCreateRequestDto dto) {
+    public HistoryResponseDto create(Long userId, HistoryCreateRequestDto dto) {
         History history = new History(
                 null,
+                userId,
                 dto.productId(),
                 dto.productName(),
                 dto.category(),

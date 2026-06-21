@@ -10,6 +10,7 @@ import lombok.*;
 public class Product {
 
     private Long id;
+    private Long userId;
     private String name;
     private String description;
     private String category;

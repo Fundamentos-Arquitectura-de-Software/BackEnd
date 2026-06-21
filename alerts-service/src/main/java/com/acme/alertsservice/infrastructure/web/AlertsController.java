@@ -18,17 +18,17 @@ public class AlertsController {
     }
 
     @GetMapping
-    public List<AlertResponse> getAll() {
-        return service.getAll();
+    public List<AlertResponse> getAll(@RequestParam Long userId) {
+        return service.getAll(userId);
     }
 
     @PostMapping
-    public AlertResponse create(@RequestBody AlertRequest request) {
-        return service.create(request);
+    public AlertResponse create(@RequestParam Long userId, @RequestBody AlertRequest request) {
+        return service.create(userId, request);
     }
 
     @PutMapping("/{id}")
-    public AlertResponse update(@PathVariable Long id, @RequestBody AlertRequest request) {
-        return service.update(id, request);
+    public AlertResponse update(@RequestParam Long userId, @PathVariable Long id, @RequestBody AlertRequest request) {
+        return service.update(userId, id, request);
     }
 }

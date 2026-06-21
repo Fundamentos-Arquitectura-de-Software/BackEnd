@@ -17,8 +17,9 @@ public class MonitoringService {
 
     private final MonitoringReadingRepository repository;
 
-    public MonitoringReadingDto save(MonitoringReadingRequest request) {
+    public MonitoringReadingDto save(Long userId, MonitoringReadingRequest request) {
         MonitoringReading reading = MonitoringReading.builder()
+                .userId(userId)
                 .temperature(request.temperature())
                 .humidity(request.humidity())
                 .ethyleneLevel(request.ethyleneLevel())
@@ -30,12 +31,29 @@ public class MonitoringService {
         return toDto(repository.save(reading));
     }
 
-    public Optional<MonitoringReadingDto> getLatest() {
-        return repository.findLatest().map(this::toDto);
+    /**
+     * Guarda una lectura proveniente del Edge (dispositivo IoT físico).
+     * El dispositivo solo reporta temperatura y humedad; el resto de campos quedan nulos.
+     */
+    public MonitoringReadingDto saveFromEdge(Long userId, String deviceId, String externalId,
+                                             Double temperature, Double humidity, LocalDateTime recordedAt) {
+        MonitoringReading reading = MonitoringReading.builder()
+                .userId(userId)
+                .deviceId(deviceId)
+                .externalId(externalId)
+                .temperature(temperature)
+                .humidity(humidity)
+                .recordedAt(recordedAt != null ? recordedAt : LocalDateTime.now())
+                .build();
+        return toDto(repository.save(reading));
     }
 
-    public List<MonitoringReadingDto> getAll() {
-        return repository.findAll().stream().map(this::toDto).toList();
+    public Optional<MonitoringReadingDto> getLatestByUser(Long userId) {
+        return repository.findLatestByUser(userId).map(this::toDto);
+    }
+
+    public List<MonitoringReadingDto> getAllByUser(Long userId) {
+        return repository.findByUserId(userId).stream().map(this::toDto).toList();
     }
 
     private MonitoringReadingDto toDto(MonitoringReading r) {
@@ -47,7 +65,8 @@ public class MonitoringService {
                 r.getOxygenLevel(),
                 r.getRipeness(),
                 r.getCleanliness(),
-                r.getRecordedAt()
+                r.getRecordedAt(),
+                r.getDeviceId()
         );
     }
 }

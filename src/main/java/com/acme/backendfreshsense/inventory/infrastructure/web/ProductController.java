@@ -1,5 +1,6 @@
 package com.acme.backendfreshsense.inventory.infrastructure.web;
 
+import com.acme.backendfreshsense.shared.infrastructure.security.CurrentUser;
 import com.acme.backendfreshsense.inventory.application.dto.ProductRequest;
 import com.acme.backendfreshsense.inventory.application.dto.ProductResponse;
 import com.acme.backendfreshsense.inventory.application.dto.UpdateProductRequest;
@@ -87,7 +88,7 @@ public class ProductController {
     })
     @PostMapping
     public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(CurrentUser.id(), request));
     }
 
     @Operation(
@@ -129,7 +130,7 @@ public class ProductController {
     })
     @GetMapping
     public List<ProductResponse> getAll() {
-        return productService.getAll();
+        return productService.getAll(CurrentUser.id());
     }
 
     @Operation(
@@ -181,7 +182,7 @@ public class ProductController {
     public ResponseEntity<ProductResponse> update(
             @Parameter(description = "ID del producto a actualizar", example = "1") @PathVariable Long id,
             @Valid @RequestBody UpdateProductRequest request) {
-        return ResponseEntity.ok(productService.update(id, request));
+        return ResponseEntity.ok(productService.update(CurrentUser.id(), id, request));
     }
 
     @Operation(
@@ -200,7 +201,7 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @Parameter(description = "ID del producto a eliminar", example = "1") @PathVariable Long id) {
-        productService.delete(id);
+        productService.delete(CurrentUser.id(), id);
         return ResponseEntity.noContent().build();
     }
 }

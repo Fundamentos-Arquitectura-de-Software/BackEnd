@@ -3,6 +3,7 @@ package com.acme.backendfreshsense.achievements.infrastructure.web;
 import com.acme.backendfreshsense.achievements.application.dto.AchievementDto;
 import com.acme.backendfreshsense.achievements.application.dto.UpdateAchievementRequest;
 import com.acme.backendfreshsense.achievements.application.service.AchievementService;
+import com.acme.backendfreshsense.shared.infrastructure.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,9 +20,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@Tag(name = "Achievements", description = "Logros y sistema de gamificación por usuario")
+@Tag(name = "Achievements", description = "Logros y sistema de gamificación del usuario autenticado")
 @RestController
-@RequestMapping("/api/users/{userId}/achievements")
+@RequestMapping("/api/achievements")
 public class AchievementController {
 
     private final AchievementService service;
@@ -45,9 +46,8 @@ public class AchievementController {
                 examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
     })
     @PostMapping("/init")
-    public ResponseEntity<Void> initDefaults(
-            @Parameter(description = "ID del usuario", example = "1") @PathVariable Long userId) {
-        service.ensureDefaultAchievements(userId);
+    public ResponseEntity<Void> initDefaults() {
+        service.ensureDefaultAchievements(CurrentUser.id());
         return ResponseEntity.ok().build();
     }
 
@@ -91,9 +91,8 @@ public class AchievementController {
                 examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
     })
     @GetMapping
-    public List<AchievementDto> list(
-            @Parameter(description = "ID del usuario", example = "1") @PathVariable Long userId) {
-        return service.listByUser(userId);
+    public List<AchievementDto> list() {
+        return service.listByUser(CurrentUser.id());
     }
 
     @Operation(
@@ -140,9 +139,8 @@ public class AchievementController {
     })
     @PatchMapping("/{achievementId}")
     public AchievementDto update(
-            @Parameter(description = "ID del usuario", example = "1") @PathVariable Long userId,
             @Parameter(description = "UUID del logro", example = "a1b2c3d4-e5f6-7890-ab12-cd34ef567890") @PathVariable UUID achievementId,
             @Valid @RequestBody UpdateAchievementRequest req) {
-        return service.updateProgress(userId, achievementId, req.completionPercentage());
+        return service.updateProgress(CurrentUser.id(), achievementId, req.completionPercentage());
     }
 }

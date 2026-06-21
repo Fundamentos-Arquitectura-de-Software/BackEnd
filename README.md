@@ -14,14 +14,39 @@ API REST del sistema FreshSense construida con Spring Boot 3.5.7 y Java 17, sigu
 
 ---
 
-## Configuracion local
+## Opcion rapida: levantar TODO con Docker (recomendado)
+
+Si tienes **Docker Desktop**, no necesitas instalar Java, Maven, Node ni MySQL. Un solo comando levanta MySQL (con las 3 bases creadas automaticamente), Eureka, el monolito, los dos microservicios y el frontend con Nginx.
+
+Desde la **raiz del proyecto** (la carpeta que contiene `docker-compose.yml`, un nivel arriba de `BackEnd/`):
+
+```bash
+docker compose build     # compila los 4 servicios Java + el frontend (la 1ra vez tarda varios minutos)
+docker compose up        # levanta todo
+```
+
+Cuando veas `Started BackendFreshSenseApplication`, abre:
+
+- App: `http://localhost`
+- Swagger: `http://localhost/swagger-ui/index.html`
+- Usuario demo: `demo@freshsense.com` / `Demo1234!`
+
+Para apagar: `Ctrl + C` (o `docker compose down`). Si cambias codigo: `docker compose up --build`.
+
+> Nota: el `docker-compose.yml` ya trae credenciales de desarrollo (JWT/AES/DB) para correr en local sin pedir nada. No usa las credenciales de produccion.
+
+---
+
+## Configuracion local (manual, sin Docker)
 
 ### 1. Base de datos
 
-Crear la base de datos en MySQL antes de levantar cualquier servicio:
+Cada servicio usa **su propia base de datos**. Crearlas en MySQL antes de levantar (solo si corres en modo manual; con Docker se crean solas):
 
 ```sql
-CREATE DATABASE freshsense_db;
+CREATE DATABASE freshsense_db;   -- monolito
+CREATE DATABASE alerts_db;       -- alerts-service
+CREATE DATABASE recipes_db;      -- recipes-service
 ```
 
 ### 2. Archivos de propiedades locales
@@ -261,8 +286,71 @@ Estructura de capas DDD por modulo:
 | `reports`       | `/api/history`                     | Historial de consumo; `/advanced` requiere premium |
 | `billing`       | `/api/billing`                     | Planes y suscripciones                             |
 | `notifications` | `/api/notifications`               | Bandeja in-app, preferencias, envio (solo ADMIN)   |
-| `achievements`  | `/api/users/{userId}/achievements` | Logros y gamificacion por usuario                  |
-| `challenges`    | `/api/challenges`                  | Retos, enroll y leaderboard                        |
+| `achievements`  | `/api/achievements`                | Logros del usuario autenticado (userId del token)  |
+| `challenges`    | `/api/challenges`                  | Retos, enroll, leaderboard y progreso              |
+| `monitoring`    | `/api/devices`                     | Registro de dispositivos IoT del usuario           |
+| `monitoring`    | `/api/edge/readings`               | **Ingesta de lecturas desde el Edge** (X-Device-Key) |
+| `monitoring`    | `/api/thresholds`                  | Umbrales temp/humedad por categoria (referencia)   |
+
+---
+
+## API del Edge / IoT (para el equipo del dispositivo)
+
+Flujo del proyecto: **IoT (ESP32) -> Edge -> Backend -> App**. El dispositivo fisico envia sus lecturas al backend a traves de este endpoint.
+
+### 1. Registrar el dispositivo (una vez)
+
+Antes de enviar lecturas, el usuario registra el dispositivo desde la app (vista **Dispositivos**) o por API:
+
+```
+POST /api/devices          (requiere estar logueado)
+Body: { "deviceId": "esp32-freshsense-1", "name": "Refrigerador cocina" }
+```
+
+La respuesta incluye un `secretKey` que **solo se muestra al registrar**. Esa es la clave que el Edge usara en la cabecera `X-Device-Key`. Guardala.
+
+### 2. Enviar lecturas desde el Edge
+
+```
+POST  http://<IP-DEL-SERVIDOR>:8080/api/edge/readings
+Headers:
+  Content-Type: application/json
+  X-Device-Key: <secretKey del dispositivo registrado>
+Body:
+{
+  "deviceId": "esp32-freshsense-1",
+  "temperature": 24,
+  "humidity": 40,
+  "time": "21/06/2026 10:48",
+  "id": "34c0c05ad9f7e4397335"
+}
+```
+
+| Campo         | Obligatorio | Notas                                                        |
+|---------------|-------------|--------------------------------------------------------------|
+| `deviceId`    | Si          | Identifica el sensor; debe coincidir con el registrado.      |
+| `temperature` | Si          | Numero (°C).                                                 |
+| `humidity`    | Si          | Numero (%).                                                  |
+| `time`        | No          | Formato **`dd/MM/yyyy HH:mm`**. Si falta o es invalido, se usa la hora actual. |
+| `id`          | No          | Identificador de la lectura generado en el Edge.            |
+
+**Autenticacion:** el Edge NO usa JWT. Se autentica solo con la cabecera `X-Device-Key`. El usuario dueño de la lectura se resuelve a partir del dispositivo registrado.
+
+**Respuestas:**
+- `201` — lectura guardada (devuelve el JSON de la lectura).
+- `401 "Dispositivo no autorizado"` — `deviceId` o `X-Device-Key` incorrectos.
+
+**Ejemplo con curl:**
+```bash
+curl -X POST http://localhost:8080/api/edge/readings \
+  -H "Content-Type: application/json" \
+  -H "X-Device-Key: <tu-clave>" \
+  -d '{ "deviceId":"esp32-freshsense-1","temperature":24,"humidity":40,"time":"21/06/2026 10:48","id":"34c0c05ad9f7e4397335" }'
+```
+
+> URL segun despliegue: en local con Docker desde la misma maquina usa `http://localhost:8080/...`; si el ESP32 esta en otro equipo de la red, usa la IP del servidor (ej. `http://192.168.1.50:8080/...`); detras de Nginx tambien sirve `http://localhost/api/edge/readings`.
+
+Las lecturas entrantes se ven en la vista **Monitoreo** y alimentan el semaforo de frescura del inventario (comparando contra los umbrales de `/api/thresholds`).
 
 ---
 
@@ -293,7 +381,7 @@ El rol se actualiza automaticamente mediante eventos de dominio cuando el usuari
 - `POST /api/accounts/logout`
 - `POST /api/accounts/refresh`
 - `GET /api/billing/plans`
-- `GET /api/recipes`, `GET /api/recipes/{id}`
+- `POST /api/edge/readings` (autenticado por `X-Device-Key`, no por JWT)
 - `/v3/api-docs/**`, `/swagger-ui/**`
 
 ### Cifrado en reposo
@@ -371,13 +459,56 @@ BackEnd/
 
 ---
 
-## Despliegue en produccion
+## Despliegue en produccion (Azure)
 
-La aplicacion esta preparada para despliegue en plataformas PaaS (Railway, Render, Heroku).
+La infraestructura de produccion corre en **Azure Container Apps** con imagen en **Azure Container Registry**.
 
-1. Configurar todas las variables de entorno en la plataforma (ver tabla de variables).
-2. La plataforma debe proveer una instancia MySQL 8.0. Las variables `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD` son usadas automaticamente si estan presentes.
-3. Hibernate crea y actualiza el schema automaticamente (`ddl-auto=update`).
-4. Los planes de billing se seedean automaticamente al primer arranque si la tabla `plans` esta vacia.
-5. `JWT_SECRET` y `AES_SECRET` deben tener minimo 32 caracteres y ser valores aleatorios seguros — nunca usar los mismos valores de desarrollo en produccion.
-6. Para microservicios en produccion, configurar `EUREKA_URL` apuntando al servidor Eureka desplegado.
+### URLs de produccion
+
+| Servicio | URL |
+|----------|-----|
+| API REST (monolito) | `https://freshsense-backend.mangoground-03a86fb8.eastus.azurecontainerapps.io` |
+| Swagger UI | `https://freshsense-backend.mangoground-03a86fb8.eastus.azurecontainerapps.io/swagger-ui/index.html` |
+| Eureka Server | interno (`http://eureka-server`) — sin ingress externo |
+| Alerts Service | interno — solo accesible via Feign desde el monolito |
+| Recipes Service | interno — solo accesible via Feign desde el monolito |
+
+### Infraestructura Azure
+
+| Recurso | Nombre |
+|---------|--------|
+| Resource Group | `freshsense-rg` |
+| Container Registry | `freshsenseacr.azurecr.io` |
+| Container Apps Environment | `freshsense-env` (East US) |
+| Container App (monolito) | `freshsense-backend` |
+| Container App (eureka) | `eureka-server` |
+| Container App (alerts) | `alerts-service` |
+| Container App (recipes) | `recipes-service` |
+
+### Base de datos en produccion
+
+**TiDB Cloud Serverless** (MySQL-compatible). Las tres bases de datos estan creadas:
+- `freshsense_db` — monolito principal
+- `alerts_db` — alerts-service
+- `recipes_db` — recipes-service
+
+Credenciales en poder del lider del proyecto (Fabricio) — NO commitear.
+
+### CI/CD
+
+**GitHub Actions** configurado automaticamente via Azure Portal (Continuous Deployment).
+
+- Workflow: `.github/workflows/freshsense-backend-AutoDeployTrigger-*.yml`
+- Cada push a `main` compila la imagen Docker, la sube a `freshsenseacr.azurecr.io` y despliega una nueva revision en `freshsense-backend`.
+- Autenticacion con Azure via **User-Assigned Managed Identity** (sin Service Principal).
+
+### Variables de entorno en produccion
+
+Configuradas directamente en cada Container App via Azure Portal o CLI. Las variables sensibles (`JWT_SECRET`, `AES_SECRET`, credenciales TiDB, Google OAuth2) estan en Azure Container Apps secrets — solicitarlas a Fabricio.
+
+### Notas de arquitectura en produccion
+
+- Eureka: los microservicios se registran usando `EUREKA_INSTANCE_HOSTNAME=<nombre-del-servicio>` y el monolito los descubre via DNS interno de Container Apps (`http://eureka-server`).
+- Google OAuth2 redirect URI registrado en Google Cloud Console para produccion: `https://freshsense-backend.mangoground-03a86fb8.eastus.azurecontainerapps.io/login/oauth2/code/google`
+- CORS configurado en `SecurityConfig.java` para aceptar requests desde el frontend de produccion y localhost:4200.
+- TiDB requiere TLS: la JDBC URL usa `sslMode=VERIFY_IDENTITY&enabledTLSProtocols=TLSv1.2,TLSv1.3`.

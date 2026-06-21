@@ -28,6 +28,9 @@ public class HistoryJpaEntity {
     @Column(nullable = false)
     private LocalDateTime date;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     public HistoryJpaEntity() {
     }
 
@@ -60,6 +63,10 @@ public class HistoryJpaEntity {
         return date;
     }
 
+    public Long getUserId() {
+        return userId;
+    }
+
     // ====== SETTERS ======
     public void setId(Long id) {
         this.id = id;
@@ -87,5 +94,9 @@ public class HistoryJpaEntity {
 
     public void setDate(LocalDateTime date) {
         this.date = date;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }

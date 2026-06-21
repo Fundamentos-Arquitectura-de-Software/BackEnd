@@ -41,7 +41,7 @@ public class AccountService {
 
     public UserResponse register(UserRegistrationRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("El correo ya está registrado");
+            throw new IllegalStateException("El correo ya está registrado");
         }
 
         User user = new User(

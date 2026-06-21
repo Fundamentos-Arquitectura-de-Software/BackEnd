@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class MonitoringReading {
 
     private Long id;
+    private Long userId;
     private Double temperature;
     private Double humidity;
     private Double ethyleneLevel;
@@ -19,4 +20,6 @@ public class MonitoringReading {
     private Double ripeness;
     private Double cleanliness;
     private LocalDateTime recordedAt;
+    private String deviceId;
+    private String externalId;
 }

@@ -3,6 +3,7 @@ package com.acme.backendfreshsense.monitoring.infrastructure.web;
 import com.acme.backendfreshsense.monitoring.application.dto.MonitoringReadingDto;
 import com.acme.backendfreshsense.monitoring.application.dto.MonitoringReadingRequest;
 import com.acme.backendfreshsense.monitoring.application.service.MonitoringService;
+import com.acme.backendfreshsense.shared.infrastructure.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -88,7 +89,7 @@ public class MonitoringController {
     })
     @PostMapping
     public ResponseEntity<MonitoringReadingDto> create(@Valid @RequestBody MonitoringReadingRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(monitoringService.save(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(monitoringService.save(CurrentUser.id(), request));
     }
 
     @Operation(
@@ -124,7 +125,7 @@ public class MonitoringController {
     })
     @GetMapping("/latest")
     public ResponseEntity<MonitoringReadingDto> getLatest() {
-        return monitoringService.getLatest()
+        return monitoringService.getLatestByUser(CurrentUser.id())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.noContent().build());
     }
@@ -172,6 +173,6 @@ public class MonitoringController {
     })
     @GetMapping
     public List<MonitoringReadingDto> getAll() {
-        return monitoringService.getAll();
+        return monitoringService.getAllByUser(CurrentUser.id());
     }
 }

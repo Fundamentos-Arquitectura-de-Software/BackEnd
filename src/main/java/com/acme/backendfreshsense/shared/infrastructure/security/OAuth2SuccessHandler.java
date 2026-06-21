@@ -74,11 +74,15 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // Cookies HttpOnly
         Cookie authCookie = new Cookie("authToken", accessToken);
         authCookie.setHttpOnly(true);
+        authCookie.setSecure(true);
+        authCookie.setAttribute("SameSite", "None");
         authCookie.setPath("/");
         authCookie.setMaxAge(15 * 60);
 
         Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
         refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setAttribute("SameSite", "None");
         refreshCookie.setPath("/api/accounts/refresh");
         refreshCookie.setMaxAge(refreshDays * 24 * 3600);
 

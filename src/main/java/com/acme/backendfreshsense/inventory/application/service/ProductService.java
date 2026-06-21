@@ -17,8 +17,9 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    public ProductResponse create(ProductRequest request) {
+    public ProductResponse create(Long userId, ProductRequest request) {
         Product product = Product.builder()
+                .userId(userId)
                 .name(request.name())
                 .description(request.description())
                 .category(request.category())
@@ -28,24 +29,27 @@ public class ProductService {
         return map(productRepository.save(product));
     }
 
-    public List<ProductResponse> getAll() {
-        return productRepository.findAll().stream().map(this::map).toList();
+    public List<ProductResponse> getAll(Long userId) {
+        return productRepository.findByUserId(userId).stream()
+                .map(this::map)
+                .toList();
     }
 
-    public ProductResponse update(Long id, UpdateProductRequest request) {
-        Product product = productRepository.findById(id)
+    public ProductResponse update(Long userId, Long id, UpdateProductRequest request) {
+        Product product = productRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
-        if (request.quantity() != null) {
-            product.setQuantity(request.quantity());
-        }
+        if (request.name() != null)        product.setName(request.name());
+        if (request.description() != null) product.setDescription(request.description());
+        if (request.category() != null)    product.setCategory(request.category());
+        if (request.quantity() != null)    product.setQuantity(request.quantity());
+        if (request.imageUrl() != null)    product.setImageUrl(request.imageUrl());
         return map(productRepository.save(product));
     }
 
-    public void delete(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Producto no encontrado con id: " + id);
-        }
-        productRepository.deleteById(id);
+    public void delete(Long userId, Long id) {
+        Product product = productRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
+        productRepository.deleteById(product.getId());
     }
 
     private ProductResponse map(Product product) {

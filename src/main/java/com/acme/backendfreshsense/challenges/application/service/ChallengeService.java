@@ -53,6 +53,14 @@ public class ChallengeService {
         enrollmentRepo.save(enrollment);
     }
 
+    public void updateProgress(Long challengeId, Long userId, int progress) {
+        Enrollment enrollment = enrollmentRepo.findByChallengeIdAndUserId(challengeId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Inscripción no encontrada"));
+        int clamped = Math.max(0, Math.min(100, progress));
+        enrollment.setProgress(clamped);
+        enrollmentRepo.save(enrollment);
+    }
+
     public List<LeaderboardEntryDto> getLeaderboard(Long challengeId) {
         List<Enrollment> enrollments = enrollmentRepo.findByChallengeIdAndStatus(challengeId, "enrolled");
         AtomicInteger rank = new AtomicInteger(1);

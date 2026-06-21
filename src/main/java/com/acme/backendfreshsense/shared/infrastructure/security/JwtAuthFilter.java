@@ -35,7 +35,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             token = extractTokenFromCookie(request);
         }
 
-        if (token != null && jwtService.isValid(token)) {
+        if (token != null && jwtService.isValid(token) && !"refresh".equals(jwtService.extractType(token))) {
             String email = jwtService.extractEmail(token);
             String role = jwtService.extractRole(token);
             Long userId = jwtService.extractUserId(token);
