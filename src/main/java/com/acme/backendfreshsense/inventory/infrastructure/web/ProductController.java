@@ -1,6 +1,6 @@
 package com.acme.backendfreshsense.inventory.infrastructure.web;
 
-import com.acme.backendfreshsense.shared.infrastructure.security.JwtService;
+import com.acme.backendfreshsense.shared.infrastructure.security.CurrentUser;
 import com.acme.backendfreshsense.inventory.application.dto.ProductRequest;
 import com.acme.backendfreshsense.inventory.application.dto.ProductResponse;
 import com.acme.backendfreshsense.inventory.application.dto.UpdateProductRequest;
@@ -13,15 +13,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -32,7 +29,6 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
-    private final JwtService jwtService;
 
     @Operation(
         summary = "Registrar un producto",
@@ -91,10 +87,8 @@ public class ProductController {
                 examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
     })
     @PostMapping
-    public ResponseEntity<ProductResponse> create(HttpServletRequest httpRequest,
-                                                   @Valid @RequestBody ProductRequest request) {
-        Long userId = extractUserId(httpRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(userId, request));
+    public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(CurrentUser.id(), request));
     }
 
     @Operation(
@@ -135,9 +129,8 @@ public class ProductController {
                 examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
     })
     @GetMapping
-    public List<ProductResponse> getAll(HttpServletRequest httpRequest) {
-        Long userId = extractUserId(httpRequest);
-        return productService.getAll(userId);
+    public List<ProductResponse> getAll() {
+        return productService.getAll(CurrentUser.id());
     }
 
     @Operation(
@@ -189,7 +182,7 @@ public class ProductController {
     public ResponseEntity<ProductResponse> update(
             @Parameter(description = "ID del producto a actualizar", example = "1") @PathVariable Long id,
             @Valid @RequestBody UpdateProductRequest request) {
-        return ResponseEntity.ok(productService.update(id, request));
+        return ResponseEntity.ok(productService.update(CurrentUser.id(), id, request));
     }
 
     @Operation(
@@ -208,23 +201,7 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @Parameter(description = "ID del producto a eliminar", example = "1") @PathVariable Long id) {
-        productService.delete(id);
+        productService.delete(CurrentUser.id(), id);
         return ResponseEntity.noContent().build();
-    }
-
-    private Long extractUserId(HttpServletRequest request) {
-        String token = null;
-        if (request.getCookies() != null) {
-            for (Cookie c : request.getCookies()) {
-                if ("authToken".equals(c.getName())) { token = c.getValue(); break; }
-            }
-        }
-        if (token == null) {
-            String header = request.getHeader("Authorization");
-            if (header != null && header.startsWith("Bearer ")) token = header.substring(7);
-        }
-        Long userId = token != null ? jwtService.extractUserId(token) : null;
-        if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token requerido");
-        return userId;
     }
 }

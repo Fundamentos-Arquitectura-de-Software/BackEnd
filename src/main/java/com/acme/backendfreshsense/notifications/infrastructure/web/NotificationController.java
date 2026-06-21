@@ -8,17 +8,13 @@ import com.acme.backendfreshsense.notifications.domain.model.InAppNotification;
 import com.acme.backendfreshsense.notifications.domain.model.NotificationPayload;
 import com.acme.backendfreshsense.notifications.domain.model.NotificationPreference;
 import com.acme.backendfreshsense.notifications.domain.repository.InAppNotificationRepository;
-import com.acme.backendfreshsense.shared.infrastructure.security.JwtService;
+import com.acme.backendfreshsense.shared.infrastructure.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -30,14 +26,11 @@ public class NotificationController {
 
     private final NotificationService notificationService;
     private final InAppNotificationRepository inAppNotificationRepository;
-    private final JwtService jwtService;
 
     public NotificationController(NotificationService notificationService,
-                                   InAppNotificationRepository inAppNotificationRepository,
-                                   JwtService jwtService) {
+                                   InAppNotificationRepository inAppNotificationRepository) {
         this.notificationService = notificationService;
         this.inAppNotificationRepository = inAppNotificationRepository;
-        this.jwtService = jwtService;
     }
 
     /** TS32 — Enviar notificación a un usuario. Requiere rol ADMIN. */
@@ -59,8 +52,8 @@ public class NotificationController {
     /** GET /api/notifications — bandeja in-app del usuario autenticado. */
     @GetMapping
     @Operation(summary = "Obtener bandeja de notificaciones in-app")
-    public ResponseEntity<List<NotificationResponse>> getInbox(HttpServletRequest httpRequest) {
-        Long userId = extractUserId(httpRequest);
+    public ResponseEntity<List<NotificationResponse>> getInbox() {
+        Long userId = CurrentUser.id();
         List<NotificationResponse> result = inAppNotificationRepository
                 .findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
@@ -69,21 +62,28 @@ public class NotificationController {
         return ResponseEntity.ok(result);
     }
 
+    /** PATCH /api/notifications/{id}/read — marca una notificación como leída. */
+    @PatchMapping("/{id}/read")
+    @Operation(summary = "Marcar notificación como leída")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
+        CurrentUser.id();
+        inAppNotificationRepository.markAsRead(id);
+        return ResponseEntity.noContent().build();
+    }
+
     /** GET /api/notifications/preferences */
     @GetMapping("/preferences")
     @Operation(summary = "Obtener preferencias de notificación")
-    public ResponseEntity<NotificationPreference> getPreferences(HttpServletRequest httpRequest) {
-        Long userId = extractUserId(httpRequest);
-        return ResponseEntity.ok(notificationService.getPreferences(userId));
+    public ResponseEntity<NotificationPreference> getPreferences() {
+        return ResponseEntity.ok(notificationService.getPreferences(CurrentUser.id()));
     }
 
     /** PUT /api/notifications/preferences */
     @PutMapping("/preferences")
     @Operation(summary = "Actualizar preferencias de notificación (US09/US24)")
     public ResponseEntity<NotificationPreference> updatePreferences(
-            HttpServletRequest httpRequest,
             @Valid @RequestBody NotificationPreferenceRequest request) {
-        Long userId = extractUserId(httpRequest);
+        Long userId = CurrentUser.id();
         NotificationPreference updated = new NotificationPreference(userId);
         updated.setInAppEnabled(request.isInAppEnabled());
         updated.setEmailEnabled(request.isEmailEnabled());
@@ -91,22 +91,6 @@ public class NotificationController {
         updated.setQuietStart(request.getQuietStart());
         updated.setQuietEnd(request.getQuietEnd());
         return ResponseEntity.ok(notificationService.updatePreferences(userId, updated));
-    }
-
-    private Long extractUserId(HttpServletRequest request) {
-        String token = null;
-        if (request.getCookies() != null) {
-            for (Cookie c : request.getCookies()) {
-                if ("authToken".equals(c.getName())) { token = c.getValue(); break; }
-            }
-        }
-        if (token == null) {
-            String header = request.getHeader("Authorization");
-            if (header != null && header.startsWith("Bearer ")) token = header.substring(7);
-        }
-        Long userId = token != null ? jwtService.extractUserId(token) : null;
-        if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token requerido");
-        return userId;
     }
 
     private NotificationResponse toResponse(InAppNotification n) {

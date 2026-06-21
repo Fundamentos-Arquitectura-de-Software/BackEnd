@@ -24,16 +24,15 @@ public class MonitoringReadingEntity {
     @Column(nullable = false)
     private Double humidity;
 
-    @Column(name = "ethylene_level", nullable = false)
+    // Campos opcionales: el sensor físico (ESP32) solo envía temperatura y humedad.
+    @Column(name = "ethylene_level")
     private Double ethyleneLevel;
 
-    @Column(name = "oxygen_level", nullable = false)
+    @Column(name = "oxygen_level")
     private Double oxygenLevel;
 
-    @Column(nullable = false)
     private Double ripeness;
 
-    @Column(nullable = false)
     private Double cleanliness;
 
     @Column(name = "recorded_at", nullable = false)
@@ -41,4 +40,12 @@ public class MonitoringReadingEntity {
 
     @Column(name = "user_id")
     private Long userId;
+
+    /** Identificador del dispositivo IoT que originó la lectura (p. ej. esp32-freshsense-1). */
+    @Column(name = "device_id")
+    private String deviceId;
+
+    /** Identificador de la lectura generado en el Edge (no es la PK de la BD). */
+    @Column(name = "external_id")
+    private String externalId;
 }

@@ -20,4 +20,6 @@ public class MonitoringReading {
     private Double ripeness;
     private Double cleanliness;
     private LocalDateTime recordedAt;
+    private String deviceId;
+    private String externalId;
 }

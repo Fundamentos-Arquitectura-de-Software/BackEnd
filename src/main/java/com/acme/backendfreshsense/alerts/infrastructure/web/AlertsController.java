@@ -3,6 +3,7 @@ package com.acme.backendfreshsense.alerts.infrastructure.web;
 import com.acme.backendfreshsense.alerts.application.dto.AlertRequest;
 import com.acme.backendfreshsense.alerts.application.dto.AlertResponse;
 import com.acme.backendfreshsense.alerts.infrastructure.feign.AlertsFeignClient;
+import com.acme.backendfreshsense.shared.infrastructure.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -67,7 +68,7 @@ public class AlertsController {
     })
     @GetMapping
     public List<AlertResponse> getAll() {
-        return alertsFeignClient.getAll();
+        return alertsFeignClient.getAll(CurrentUser.id());
     }
 
     @Operation(
@@ -120,7 +121,7 @@ public class AlertsController {
     })
     @PostMapping
     public AlertResponse create(@Valid @RequestBody AlertRequest request) {
-        return alertsFeignClient.create(request);
+        return alertsFeignClient.create(CurrentUser.id(), request);
     }
 
     @Operation(
@@ -178,6 +179,6 @@ public class AlertsController {
     public AlertResponse update(
             @Parameter(description = "ID de la alerta a actualizar", example = "3") @PathVariable Long id,
             @Valid @RequestBody AlertRequest request) {
-        return alertsFeignClient.update(id, request);
+        return alertsFeignClient.update(CurrentUser.id(), id, request);
     }
 }

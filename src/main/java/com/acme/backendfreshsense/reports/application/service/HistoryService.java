@@ -18,13 +18,6 @@ public class HistoryService {
         this.repository = repository;
     }
 
-    public List<HistoryResponseDto> getAll() {
-        return repository.findAll()
-                .stream()
-                .map(this::toDto)
-                .toList();
-    }
-
     public List<HistoryResponseDto> getAllByUser(Long userId) {
         return repository.findByUserId(userId)
                 .stream()

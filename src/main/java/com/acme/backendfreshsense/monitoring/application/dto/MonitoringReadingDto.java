@@ -28,5 +28,8 @@ public record MonitoringReadingDto(
         Double cleanliness,
 
         @Schema(description = "Fecha y hora en que se registró la lectura (ISO 8601)", example = "2026-06-01T10:30:00")
-        LocalDateTime recordedAt
+        LocalDateTime recordedAt,
+
+        @Schema(description = "Identificador del dispositivo IoT origen de la lectura", example = "esp32-freshsense-1")
+        String deviceId
 ) {}

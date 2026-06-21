@@ -53,6 +53,8 @@ public class MonitoringReadingRepositoryAdapter implements MonitoringReadingRepo
                 .ripeness(e.getRipeness())
                 .cleanliness(e.getCleanliness())
                 .recordedAt(e.getRecordedAt())
+                .deviceId(e.getDeviceId())
+                .externalId(e.getExternalId())
                 .build();
     }
 
@@ -67,6 +69,8 @@ public class MonitoringReadingRepositoryAdapter implements MonitoringReadingRepo
                 .ripeness(r.getRipeness())
                 .cleanliness(r.getCleanliness())
                 .recordedAt(r.getRecordedAt())
+                .deviceId(r.getDeviceId())
+                .externalId(r.getExternalId())
                 .build();
     }
 }

@@ -15,11 +15,11 @@ import java.util.List;
 public interface AlertsFeignClient {
 
     @GetMapping("/api/alerts")
-    List<AlertResponse> getAll();
+    List<AlertResponse> getAll(@RequestParam("userId") Long userId);
 
     @PostMapping("/api/alerts")
-    AlertResponse create(@RequestBody AlertRequest request);
+    AlertResponse create(@RequestParam("userId") Long userId, @RequestBody AlertRequest request);
 
     @PutMapping("/api/alerts/{id}")
-    AlertResponse update(@PathVariable("id") Long id, @RequestBody AlertRequest request);
+    AlertResponse update(@RequestParam("userId") Long userId, @PathVariable("id") Long id, @RequestBody AlertRequest request);
 }

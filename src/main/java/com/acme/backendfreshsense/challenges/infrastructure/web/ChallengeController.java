@@ -11,11 +11,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.acme.backendfreshsense.shared.infrastructure.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -98,7 +97,7 @@ public class ChallengeController {
     @PostMapping("/{challengeId}/enroll")
     public ResponseEntity<Void> enroll(
             @Parameter(description = "ID del reto al que inscribirse", example = "1") @PathVariable Long challengeId) {
-        challengeService.enroll(challengeId, resolveUserId());
+        challengeService.enroll(challengeId, CurrentUser.id());
         return ResponseEntity.ok().build();
     }
 
@@ -118,7 +117,7 @@ public class ChallengeController {
     @DeleteMapping("/{challengeId}/enroll")
     public ResponseEntity<Void> leave(
             @Parameter(description = "ID del reto que se quiere abandonar", example = "1") @PathVariable Long challengeId) {
-        challengeService.leave(challengeId, resolveUserId());
+        challengeService.leave(challengeId, CurrentUser.id());
         return ResponseEntity.noContent().build();
     }
 
@@ -172,8 +171,22 @@ public class ChallengeController {
         return challengeService.getLeaderboard(challengeId);
     }
 
-    private Long resolveUserId() {
-        var auth = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        return (Long) auth.getDetails();
+    @Operation(
+        summary = "Actualizar el progreso del usuario en un reto",
+        description = "Fija el progreso (0–100) del usuario autenticado en el reto indicado. Útil para reflejar avance en el leaderboard."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Progreso actualizado — sin cuerpo de respuesta"),
+        @ApiResponse(responseCode = "404", description = "Inscripción no encontrada",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                examples = @ExampleObject(value = "{\"error\": \"Inscripción no encontrada\"}")))
+    })
+    @PatchMapping("/{challengeId}/progress")
+    public ResponseEntity<Void> updateProgress(
+            @Parameter(description = "ID del reto", example = "1") @PathVariable Long challengeId,
+            @RequestBody java.util.Map<String, Integer> body) {
+        int progress = body.getOrDefault("progress", 0);
+        challengeService.updateProgress(challengeId, CurrentUser.id(), progress);
+        return ResponseEntity.noContent().build();
     }
 }

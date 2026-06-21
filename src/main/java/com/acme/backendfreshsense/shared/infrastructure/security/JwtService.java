@@ -70,6 +70,10 @@ public class JwtService {
         return (String) parseClaims(token).get("role");
     }
 
+    public String extractType(String token) {
+        return (String) parseClaims(token).get("type");
+    }
+
     public boolean isValid(String token) {
         try {
             parseClaims(token);

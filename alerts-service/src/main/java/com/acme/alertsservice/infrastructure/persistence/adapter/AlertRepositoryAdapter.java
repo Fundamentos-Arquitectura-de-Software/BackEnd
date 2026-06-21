@@ -19,6 +19,7 @@ public class AlertRepositoryAdapter implements AlertRepository {
     private static Alert toDomain(AlertEntity e) {
         Alert a = new Alert();
         a.setId(e.getId());
+        a.setUserId(e.getUserId());
         a.setTitle(e.getTitle());
         a.setMessage(e.getMessage());
         a.setSeverity(e.getSeverity());
@@ -31,6 +32,7 @@ public class AlertRepositoryAdapter implements AlertRepository {
     private static AlertEntity toEntity(Alert a) {
         AlertEntity e = new AlertEntity();
         e.setId(a.getId());
+        e.setUserId(a.getUserId());
         e.setTitle(a.getTitle());
         e.setMessage(a.getMessage());
         e.setSeverity(a.getSeverity());
@@ -41,13 +43,13 @@ public class AlertRepositoryAdapter implements AlertRepository {
     }
 
     @Override
-    public List<Alert> findAll() {
-        return jpa.findAll().stream().map(AlertRepositoryAdapter::toDomain).toList();
+    public List<Alert> findByUserId(Long userId) {
+        return jpa.findByUserId(userId).stream().map(AlertRepositoryAdapter::toDomain).toList();
     }
 
     @Override
-    public Optional<Alert> findById(Long id) {
-        return jpa.findById(id).map(AlertRepositoryAdapter::toDomain);
+    public Optional<Alert> findByIdAndUserId(Long id, Long userId) {
+        return jpa.findByIdAndUserId(id, userId).map(AlertRepositoryAdapter::toDomain);
     }
 
     @Override

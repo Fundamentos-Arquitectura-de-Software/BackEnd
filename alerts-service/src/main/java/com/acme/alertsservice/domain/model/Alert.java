@@ -10,6 +10,7 @@ import lombok.Setter;
 public class Alert {
 
     private Long id;
+    private Long userId;
     private String title;
     private String message;
     private String severity;

@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final int MAX_REQUESTS_PER_MINUTE = 5;
+    private static final int MAX_TRACKED_IPS = 10_000;
 
     private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
 
@@ -34,6 +35,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                     FilterChain chain) throws ServletException, IOException {
 
         String ip = resolveClientIp(request);
+        // Evita crecimiento ilimitado del mapa (DoS por memoria con IPs rotativas).
+        if (buckets.size() > MAX_TRACKED_IPS) {
+            buckets.clear();
+        }
         Bucket bucket = buckets.computeIfAbsent(ip, k -> newBucket());
 
         if (bucket.tryConsume(1)) {

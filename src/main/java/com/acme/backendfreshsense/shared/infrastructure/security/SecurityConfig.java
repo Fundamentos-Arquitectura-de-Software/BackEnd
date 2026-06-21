@@ -59,6 +59,8 @@ public class SecurityConfig {
                                 "/api/accounts/logout",
                                 "/api/accounts/refresh").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/billing/plans").permitAll()
+                        // Edge/IoT: autenticación por X-Device-Key dentro del controller, no por JWT.
+                        .requestMatchers("/api/edge/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 )

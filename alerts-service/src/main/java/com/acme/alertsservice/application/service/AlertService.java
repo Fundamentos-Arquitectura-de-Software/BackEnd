@@ -18,12 +18,13 @@ public class AlertService {
         this.repo = repo;
     }
 
-    public List<AlertResponse> getAll() {
-        return repo.findAll().stream().map(this::toResponse).toList();
+    public List<AlertResponse> getAll(Long userId) {
+        return repo.findByUserId(userId).stream().map(this::toResponse).toList();
     }
 
-    public AlertResponse create(AlertRequest request) {
+    public AlertResponse create(Long userId, AlertRequest request) {
         Alert alert = new Alert();
+        alert.setUserId(userId);
         alert.setTitle(request.title());
         alert.setMessage(request.message());
         alert.setSeverity(request.severity());
@@ -33,8 +34,8 @@ public class AlertService {
         return toResponse(repo.save(alert));
     }
 
-    public AlertResponse update(Long id, AlertRequest request) {
-        Alert existing = repo.findById(id)
+    public AlertResponse update(Long userId, Long id, AlertRequest request) {
+        Alert existing = repo.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Alert not found with id " + id));
 
         if (request.title()    != null) existing.setTitle(request.title());

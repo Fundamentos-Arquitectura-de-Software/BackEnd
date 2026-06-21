@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,8 +24,13 @@ import java.util.UUID;
 /**
  * Crea un usuario demo con datos de prueba al arrancar si no existe.
  * Credenciales: demo@freshsense.com / Demo1234!
+ *
+ * <p>Controlado por la propiedad {@code freshsense.demo-seed.enabled} (activo por defecto).
+ * En un entorno productivo real, poner {@code freshsense.demo-seed.enabled=false}
+ * para no crear una cuenta con credenciales conocidas.</p>
  */
 @Component
+@ConditionalOnProperty(name = "freshsense.demo-seed.enabled", havingValue = "true", matchIfMissing = true)
 public class DemoDataInitializer implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DemoDataInitializer.class);
@@ -63,9 +69,7 @@ public class DemoDataInitializer implements ApplicationRunner {
         Long userId = userRepo.findByEmail(DEMO_EMAIL).get().getId();
 
         // If the user already has products, skip seeding
-        long existingProducts = productRepo.findAll().stream()
-                .filter(p -> userId.equals(p.getUserId()))
-                .count();
+        long existingProducts = productRepo.findByUserId(userId).size();
         if (existingProducts > 0) {
             log.info("Demo user already has {} products — skipping seed.", existingProducts);
             return;
