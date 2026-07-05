@@ -31,5 +31,11 @@ public record MonitoringReadingDto(
         LocalDateTime recordedAt,
 
         @Schema(description = "Identificador del dispositivo IoT origen de la lectura", example = "esp32-freshsense-1")
-        String deviceId
+        String deviceId,
+
+        @Schema(description = "Estado de frescura (semáforo) clasificado por el Edge", example = "GREEN", allowableValues = {"GREEN", "YELLOW", "RED", "UNKNOWN"})
+        String status,
+
+        @Schema(description = "Categoría contra la que el Edge clasificó la lectura", example = "Lácteos")
+        String category
 ) {}

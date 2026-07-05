@@ -24,6 +24,8 @@ public class DeviceRepositoryAdapter implements DeviceRepository {
                 .secretKey(e.getSecretKey())
                 .userId(e.getUserId())
                 .registeredAt(e.getRegisteredAt())
+                .pairingCode(e.getPairingCode())
+                .pairingExpiresAt(e.getPairingExpiresAt())
                 .build();
     }
 
@@ -35,6 +37,8 @@ public class DeviceRepositoryAdapter implements DeviceRepository {
                 .secretKey(d.getSecretKey())
                 .userId(d.getUserId())
                 .registeredAt(d.getRegisteredAt())
+                .pairingCode(d.getPairingCode())
+                .pairingExpiresAt(d.getPairingExpiresAt())
                 .build();
     }
 
@@ -51,6 +55,11 @@ public class DeviceRepositoryAdapter implements DeviceRepository {
     @Override
     public Optional<Device> findByDeviceId(String deviceId) {
         return jpa.findByDeviceId(deviceId).map(DeviceRepositoryAdapter::toDomain);
+    }
+
+    @Override
+    public Optional<Device> findByPairingCode(String pairingCode) {
+        return jpa.findByPairingCode(pairingCode).map(DeviceRepositoryAdapter::toDomain);
     }
 
     @Override

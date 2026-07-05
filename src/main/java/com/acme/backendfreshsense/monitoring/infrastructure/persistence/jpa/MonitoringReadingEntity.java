@@ -48,4 +48,12 @@ public class MonitoringReadingEntity {
     /** Identificador de la lectura generado en el Edge (no es la PK de la BD). */
     @Column(name = "external_id")
     private String externalId;
+
+    /** Estado de frescura (semáforo) clasificado por el Edge: GREEN/YELLOW/RED/UNKNOWN. Nullable: las lecturas manuales no lo traen. */
+    @Column(name = "status", length = 10)
+    private String status;
+
+    /** Categoría contra la que el Edge clasificó la lectura (etiqueta de referencia). */
+    @Column(name = "category", length = 50)
+    private String category;
 }

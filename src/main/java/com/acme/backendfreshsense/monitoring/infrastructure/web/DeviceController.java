@@ -1,5 +1,6 @@
 package com.acme.backendfreshsense.monitoring.infrastructure.web;
 
+import com.acme.backendfreshsense.monitoring.application.dto.DeviceRegistrationResponse;
 import com.acme.backendfreshsense.monitoring.application.dto.DeviceResponse;
 import com.acme.backendfreshsense.monitoring.application.dto.RegisterDeviceRequest;
 import com.acme.backendfreshsense.monitoring.application.service.DeviceService;
@@ -24,11 +25,12 @@ public class DeviceController {
         this.deviceService = deviceService;
     }
 
-    @Operation(summary = "Registrar un dispositivo IoT",
-            description = "Asocia un dispositivo al usuario autenticado y devuelve su clave secreta (X-Device-Key). " +
-                          "Guarda esa clave: solo se muestra al registrar.")
+    @Operation(summary = "Registrar un dispositivo IoT (emparejamiento)",
+            description = "Asocia un dispositivo al usuario autenticado y devuelve un CÓDIGO DE EMPAREJAMIENTO temporal " +
+                          "(de un solo uso). Ese código se introduce en el Edge, que lo canjea por la clave secreta. " +
+                          "La clave nunca se muestra al usuario.")
     @PostMapping
-    public ResponseEntity<DeviceResponse> register(@Valid @RequestBody RegisterDeviceRequest request) {
+    public ResponseEntity<DeviceRegistrationResponse> register(@Valid @RequestBody RegisterDeviceRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(deviceService.register(CurrentUser.id(), request));
     }
 

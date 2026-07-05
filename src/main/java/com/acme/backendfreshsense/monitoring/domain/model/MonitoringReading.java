@@ -22,4 +22,6 @@ public class MonitoringReading {
     private LocalDateTime recordedAt;
     private String deviceId;
     private String externalId;
+    private String status;
+    private String category;
 }

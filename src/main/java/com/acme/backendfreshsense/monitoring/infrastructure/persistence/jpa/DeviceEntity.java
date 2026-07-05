@@ -31,4 +31,11 @@ public class DeviceEntity {
 
     @Column(name = "registered_at", nullable = false)
     private LocalDateTime registeredAt;
+
+    /** Código de emparejamiento de un solo uso (claiming). Null tras canjearse. */
+    @Column(name = "pairing_code", unique = true, length = 12)
+    private String pairingCode;
+
+    @Column(name = "pairing_expires_at")
+    private LocalDateTime pairingExpiresAt;
 }

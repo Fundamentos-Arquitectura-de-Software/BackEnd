@@ -36,7 +36,8 @@ public class MonitoringService {
      * El dispositivo solo reporta temperatura y humedad; el resto de campos quedan nulos.
      */
     public MonitoringReadingDto saveFromEdge(Long userId, String deviceId, String externalId,
-                                             Double temperature, Double humidity, LocalDateTime recordedAt) {
+                                             Double temperature, Double humidity, LocalDateTime recordedAt,
+                                             String status, String category) {
         MonitoringReading reading = MonitoringReading.builder()
                 .userId(userId)
                 .deviceId(deviceId)
@@ -44,6 +45,8 @@ public class MonitoringService {
                 .temperature(temperature)
                 .humidity(humidity)
                 .recordedAt(recordedAt != null ? recordedAt : LocalDateTime.now())
+                .status(status)
+                .category(category)
                 .build();
         return toDto(repository.save(reading));
     }
@@ -66,7 +69,9 @@ public class MonitoringService {
                 r.getRipeness(),
                 r.getCleanliness(),
                 r.getRecordedAt(),
-                r.getDeviceId()
+                r.getDeviceId(),
+                r.getStatus(),
+                r.getCategory()
         );
     }
 }

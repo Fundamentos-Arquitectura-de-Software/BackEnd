@@ -1,5 +1,7 @@
 package com.acme.backendfreshsense.monitoring.infrastructure.web;
 
+import com.acme.backendfreshsense.monitoring.application.dto.ClaimRequest;
+import com.acme.backendfreshsense.monitoring.application.dto.ClaimResponse;
 import com.acme.backendfreshsense.monitoring.application.dto.EdgeReadingRequest;
 import com.acme.backendfreshsense.monitoring.application.dto.MonitoringReadingDto;
 import com.acme.backendfreshsense.monitoring.application.service.DeviceService;
@@ -57,8 +59,17 @@ public class EdgeController {
         LocalDateTime recordedAt = parseTime(request.time());
         MonitoringReadingDto saved = monitoringService.saveFromEdge(
                 device.getUserId(), request.deviceId(), request.id(),
-                request.temperature(), request.humidity(), recordedAt);
+                request.temperature(), request.humidity(), recordedAt,
+                request.status(), request.category());
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    @Operation(summary = "Canjear un código de emparejamiento",
+            description = "El Edge envía el código que el usuario obtuvo en la app y recibe la clave del dispositivo " +
+                          "(X-Device-Key). El código es de un solo uso y temporal. Público: autenticado por el propio código.")
+    @PostMapping("/claim")
+    public ResponseEntity<ClaimResponse> claim(@Valid @RequestBody ClaimRequest request) {
+        return ResponseEntity.ok(deviceService.claim(request.code()));
     }
 
     private LocalDateTime parseTime(String time) {

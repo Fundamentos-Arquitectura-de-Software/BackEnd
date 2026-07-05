@@ -8,5 +8,6 @@ import java.util.Optional;
 public interface DeviceJpaRepository extends JpaRepository<DeviceEntity, Long> {
     List<DeviceEntity> findByUserId(Long userId);
     Optional<DeviceEntity> findByDeviceId(String deviceId);
+    Optional<DeviceEntity> findByPairingCode(String pairingCode);
     boolean existsByDeviceId(String deviceId);
 }

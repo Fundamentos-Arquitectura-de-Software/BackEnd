@@ -21,4 +21,9 @@ public class Device {
     private String secretKey;
     private Long userId;
     private LocalDateTime registeredAt;
+
+    /** Código de emparejamiento de un solo uso (claiming). Null una vez canjeado. */
+    private String pairingCode;
+    /** Vencimiento del código de emparejamiento. */
+    private LocalDateTime pairingExpiresAt;
 }

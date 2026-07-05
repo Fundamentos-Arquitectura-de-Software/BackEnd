@@ -55,6 +55,8 @@ public class MonitoringReadingRepositoryAdapter implements MonitoringReadingRepo
                 .recordedAt(e.getRecordedAt())
                 .deviceId(e.getDeviceId())
                 .externalId(e.getExternalId())
+                .status(e.getStatus())
+                .category(e.getCategory())
                 .build();
     }
 
@@ -71,6 +73,8 @@ public class MonitoringReadingRepositoryAdapter implements MonitoringReadingRepo
                 .recordedAt(r.getRecordedAt())
                 .deviceId(r.getDeviceId())
                 .externalId(r.getExternalId())
+                .status(r.getStatus())
+                .category(r.getCategory())
                 .build();
     }
 }

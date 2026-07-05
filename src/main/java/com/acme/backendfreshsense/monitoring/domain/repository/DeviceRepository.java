@@ -9,5 +9,6 @@ public interface DeviceRepository {
     Device save(Device device);
     List<Device> findByUserId(Long userId);
     Optional<Device> findByDeviceId(String deviceId);
+    Optional<Device> findByPairingCode(String pairingCode);
     boolean existsByDeviceId(String deviceId);
 }

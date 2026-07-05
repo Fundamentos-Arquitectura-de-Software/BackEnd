@@ -22,5 +22,11 @@ public record EdgeReadingRequest(
         String time,
 
         @Schema(description = "Identificador de la lectura generado en el Edge", example = "34c0c05ad9f7e4397335")
-        String id
+        String id,
+
+        @Schema(description = "Estado de frescura ya clasificado por el Edge (semáforo)", example = "GREEN", allowableValues = {"GREEN", "YELLOW", "RED", "UNKNOWN"}, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        String status,
+
+        @Schema(description = "Categoría contra la que el Edge clasificó la lectura (según el dispositivo)", example = "Lácteos", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        String category
 ) {}
