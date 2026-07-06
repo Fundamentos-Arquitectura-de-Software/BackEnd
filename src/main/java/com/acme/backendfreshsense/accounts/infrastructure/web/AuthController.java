@@ -1,9 +1,12 @@
 package com.acme.backendfreshsense.accounts.infrastructure.web;
 
+import com.acme.backendfreshsense.accounts.application.dto.ChangePasswordRequest;
 import com.acme.backendfreshsense.accounts.application.dto.LoginRequest;
+import com.acme.backendfreshsense.accounts.application.dto.UpdateProfileRequest;
 import com.acme.backendfreshsense.accounts.application.dto.UserRegistrationRequest;
 import com.acme.backendfreshsense.accounts.application.dto.UserResponse;
 import com.acme.backendfreshsense.accounts.application.service.AccountService;
+import com.acme.backendfreshsense.shared.infrastructure.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -231,6 +234,32 @@ public class AuthController {
     public ResponseEntity<UserResponse> me(
             @Parameter(hidden = true) @AuthenticationPrincipal String email) {
         return ResponseEntity.ok(accountService.getByEmail(email));
+    }
+
+    @Operation(summary = "Actualizar el perfil",
+            description = "Actualiza el nombre del usuario autenticado. El email no es editable.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Perfil actualizado"),
+        @ApiResponse(responseCode = "400", description = "Nombre inválido"),
+        @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    @PutMapping("/me")
+    public ResponseEntity<UserResponse> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
+        return ResponseEntity.ok(accountService.updateProfile(CurrentUser.id(), request.getFullName()));
+    }
+
+    @Operation(summary = "Cambiar la contraseña",
+            description = "Cambia la contraseña del usuario autenticado. Verifica la contraseña actual y " +
+                          "cierra las demás sesiones. La nueva contraseña debe tener 8+ caracteres, 1 mayúscula y 1 número.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Contraseña cambiada — sin cuerpo de respuesta"),
+        @ApiResponse(responseCode = "400", description = "Contraseña actual incorrecta o nueva contraseña inválida"),
+        @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        accountService.changePassword(CurrentUser.id(), request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.noContent().build();
     }
 
     // --- helpers ---

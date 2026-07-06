@@ -45,6 +45,22 @@ public class UserRepositoryAdapter implements UserRepository {
         });
     }
 
+    @Override
+    public void updateFullName(Long userId, String fullName) {
+        jpa.findById(userId).ifPresent(entity -> {
+            entity.setFullName(fullName);
+            jpa.save(entity);
+        });
+    }
+
+    @Override
+    public void updatePassword(Long userId, String encodedPassword) {
+        jpa.findById(userId).ifPresent(entity -> {
+            entity.setPassword(encodedPassword);
+            jpa.save(entity);
+        });
+    }
+
     private User toDomain(UserEntity e) {
         User u = new User(e.getEmail(), e.getPassword(), e.getFullName(), e.getRole());
         u.setId(e.getId());

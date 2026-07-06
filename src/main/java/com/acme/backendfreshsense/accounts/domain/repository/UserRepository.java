@@ -10,4 +10,6 @@ public interface UserRepository {
     boolean existsByEmail(String email);
     User save(User user);
     void updateRole(Long userId, com.acme.backendfreshsense.accounts.domain.model.Role role);
+    void updateFullName(Long userId, String fullName);
+    void updatePassword(Long userId, String encodedPassword);
 }

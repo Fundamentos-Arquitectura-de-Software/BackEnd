@@ -106,6 +106,27 @@ public class AccountService {
         return new UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getRole(), null, null);
     }
 
+    /** Actualiza el nombre del perfil del usuario autenticado. */
+    public UserResponse updateProfile(Long userId, String fullName) {
+        userRepository.updateFullName(userId, fullName);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        return new UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getRole(), null, null);
+    }
+
+    /** Cambia la contraseña verificando la actual. Revoca las sesiones (refresh tokens) por seguridad. */
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual es incorrecta");
+        }
+
+        userRepository.updatePassword(userId, passwordEncoder.encode(newPassword));
+        refreshTokenRepository.revokeAllByUserId(userId);
+    }
+
     private String issueRefreshToken(Long userId, String email) {
         String raw = jwtService.generateRefreshToken(email, userId);
         RefreshToken token = new RefreshToken(
