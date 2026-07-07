@@ -10,4 +10,5 @@ public interface RecipeRepository {
     Optional<Recipe> findById(Long id);
     Recipe save(Recipe recipe);
     boolean hasAny();
+    void deleteById(Long id);
 }

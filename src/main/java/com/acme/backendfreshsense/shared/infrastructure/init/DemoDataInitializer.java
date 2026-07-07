@@ -3,8 +3,6 @@ package com.acme.backendfreshsense.shared.infrastructure.init;
 import com.acme.backendfreshsense.accounts.domain.model.Role;
 import com.acme.backendfreshsense.accounts.infrastructure.persistence.jpa.UserJpaRepository;
 import com.acme.backendfreshsense.accounts.infrastructure.persistence.jpa.UserEntity;
-import com.acme.backendfreshsense.achievements.infrastructure.persistence.jpa.AchievementEntity;
-import com.acme.backendfreshsense.achievements.infrastructure.persistence.jpa.AchievementJpaRepository;
 import com.acme.backendfreshsense.inventory.infrastructure.persistence.jpa.ProductEntity;
 import com.acme.backendfreshsense.inventory.infrastructure.persistence.jpa.ProductJpaRepository;
 import com.acme.backendfreshsense.reports.infrastructure.persistence.HistoryJpaEntity;
@@ -19,7 +17,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Crea un usuario demo con datos de prueba al arrancar si no existe.
@@ -40,18 +37,15 @@ public class DemoDataInitializer implements ApplicationRunner {
     private final UserJpaRepository userRepo;
     private final ProductJpaRepository productRepo;
     private final HistoryJpaRepository historyRepo;
-    private final AchievementJpaRepository achievementRepo;
     private final PasswordEncoder passwordEncoder;
 
     public DemoDataInitializer(UserJpaRepository userRepo,
                                ProductJpaRepository productRepo,
                                HistoryJpaRepository historyRepo,
-                               AchievementJpaRepository achievementRepo,
                                PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.productRepo = productRepo;
         this.historyRepo = historyRepo;
-        this.achievementRepo = achievementRepo;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -95,12 +89,6 @@ public class DemoDataInitializer implements ApplicationRunner {
         saveHistory(userId, espinaca.getId(), "Espinacas",       "Verduras",  "CONSUMED", 1, LocalDateTime.now().minusDays(2));
         saveHistory(userId, yogur.getId(),    "Yogur griego",    "Lácteos",   "DISCARDED",1, LocalDateTime.now().minusDays(1));
         saveHistory(userId, huevos.getId(),   "Huevos",          "Proteínas", "CONSUMED", 4, LocalDateTime.now().minusHours(6));
-
-        // --- Logros ---
-        achievementRepo.save(new AchievementEntity(UUID.randomUUID(), userId, "Primer consumo", 100, true));
-        achievementRepo.save(new AchievementEntity(UUID.randomUUID(), userId, "Sin desperdicios", 40, true));
-        achievementRepo.save(new AchievementEntity(UUID.randomUUID(), userId, "Inventario activo", 60, true));
-        achievementRepo.save(new AchievementEntity(UUID.randomUUID(), userId, "Racha semanal", 20, false));
 
         log.info("Demo data created successfully. Login: {} / Demo1234!", DEMO_EMAIL);
     }

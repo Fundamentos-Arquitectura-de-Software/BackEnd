@@ -65,4 +65,9 @@ public class RecipeRepositoryAdapter implements RecipeRepository {
     public boolean hasAny() {
         return jpa.count() > 0;
     }
+
+    @Override
+    public void deleteById(Long id) {
+        jpa.deleteById(id);
+    }
 }
