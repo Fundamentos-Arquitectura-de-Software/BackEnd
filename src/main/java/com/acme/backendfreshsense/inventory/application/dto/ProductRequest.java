@@ -3,6 +3,8 @@ package com.acme.backendfreshsense.inventory.application.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
+import java.time.LocalDate;
+
 @Schema(description = "Datos para registrar un producto en el inventario")
 public record ProductRequest(
         @Schema(description = "Nombre del producto", example = "Manzana Fuji", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -28,5 +30,9 @@ public record ProductRequest(
 
         @Schema(description = "URL de imagen del producto (opcional)", example = "https://example.com/manzana.jpg", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
         @Pattern(regexp = "^(https?://).+$", message = "La URL debe comenzar con http:// o https://")
-        String imageUrl
+        String imageUrl,
+
+        @Schema(description = "Fecha de vencimiento del producto (yyyy-MM-dd)", example = "2026-07-20", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotNull(message = "La fecha de vencimiento es obligatoria")
+        LocalDate expirationDate
 ) {}

@@ -9,6 +9,7 @@ import com.acme.backendfreshsense.shared.infrastructure.exceptions.ResourceNotFo
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Transactional
@@ -25,6 +26,8 @@ public class ProductService {
                 .category(request.category())
                 .quantity(request.quantity())
                 .imageUrl(request.imageUrl())
+                .expirationDate(request.expirationDate())
+                .createdAt(LocalDateTime.now())
                 .build();
         return map(productRepository.save(product));
     }
@@ -43,6 +46,7 @@ public class ProductService {
         if (request.category() != null)    product.setCategory(request.category());
         if (request.quantity() != null)    product.setQuantity(request.quantity());
         if (request.imageUrl() != null)    product.setImageUrl(request.imageUrl());
+        if (request.expirationDate() != null) product.setExpirationDate(request.expirationDate());
         return map(productRepository.save(product));
     }
 
@@ -59,7 +63,9 @@ public class ProductService {
                 product.getDescription(),
                 product.getCategory(),
                 product.getQuantity(),
-                product.getImageUrl()
+                product.getImageUrl(),
+                product.getExpirationDate(),
+                product.getCreatedAt()
         );
     }
 }

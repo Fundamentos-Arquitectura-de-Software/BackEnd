@@ -32,4 +32,5 @@ public class InAppNotification {
     public boolean isRead()       { return read; }
     public void setRead(boolean read) { this.read = read; }
     public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

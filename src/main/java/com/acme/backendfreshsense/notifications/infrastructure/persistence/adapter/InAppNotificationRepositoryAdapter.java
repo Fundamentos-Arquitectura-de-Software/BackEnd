@@ -36,6 +36,7 @@ public class InAppNotificationRepositoryAdapter implements InAppNotificationRepo
         InAppNotification n = new InAppNotification(e.getUserId(), e.getTitle(), e.getMessage(), e.getAlertType());
         n.setId(e.getId());
         n.setRead(e.isRead());
+        n.setCreatedAt(e.getCreatedAt());
         return n;
     }
 }

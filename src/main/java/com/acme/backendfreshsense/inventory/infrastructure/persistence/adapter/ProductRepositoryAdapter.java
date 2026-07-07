@@ -25,6 +25,8 @@ public class ProductRepositoryAdapter implements ProductRepository {
                 .category(e.getCategory())
                 .quantity(e.getQuantity())
                 .imageUrl(e.getImageUrl())
+                .expirationDate(e.getExpirationDate())
+                .createdAt(e.getCreatedAt())
                 .build();
     }
 
@@ -37,6 +39,8 @@ public class ProductRepositoryAdapter implements ProductRepository {
                 .category(p.getCategory())
                 .quantity(p.getQuantity())
                 .imageUrl(p.getImageUrl())
+                .expirationDate(p.getExpirationDate())
+                .createdAt(p.getCreatedAt())
                 .build();
     }
 

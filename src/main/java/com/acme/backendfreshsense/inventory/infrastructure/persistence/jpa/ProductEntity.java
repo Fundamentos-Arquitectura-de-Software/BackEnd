@@ -3,6 +3,9 @@ package com.acme.backendfreshsense.inventory.infrastructure.persistence.jpa;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "products")
 @Getter
@@ -33,4 +36,11 @@ public class ProductEntity {
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
+
+    // Nullable: los productos previos a esta feature no tienen fecha (sin semáforo por vencimiento).
+    @Column(name = "expiration_date")
+    private LocalDate expirationDate;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 }

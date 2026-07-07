@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -71,15 +72,17 @@ public class DemoDataInitializer implements ApplicationRunner {
 
         log.info("Seeding demo data for user id={}...", userId);
 
-        // --- Productos ---
-        ProductEntity leche    = productRepo.save(ProductEntity.builder().userId(userId).name("Leche entera").description("Leche fresca de vaca").category("Lácteos").quantity(2).imageUrl("https://images.pexels.com/photos/236010/pexels-photo-236010.jpeg?auto=compress&cs=tinysrgb&w=400").build());
-        ProductEntity manzanas = productRepo.save(ProductEntity.builder().userId(userId).name("Manzanas Fuji").description("Manzanas dulces y crujientes").category("Frutas").quantity(6).imageUrl("https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=400").build());
-        ProductEntity pollo    = productRepo.save(ProductEntity.builder().userId(userId).name("Pechuga de pollo").description("Pechuga sin hueso").category("Carnes").quantity(1).imageUrl("https://images.pexels.com/photos/4110375/pexels-photo-4110375.jpeg?auto=compress&cs=tinysrgb&w=400").build());
-        ProductEntity yogur    = productRepo.save(ProductEntity.builder().userId(userId).name("Yogur griego").description("Yogur natural sin azúcar").category("Lácteos").quantity(3).imageUrl("https://images.pexels.com/photos/704971/pexels-photo-704971.jpeg?auto=compress&cs=tinysrgb&w=400").build());
-        ProductEntity espinaca = productRepo.save(ProductEntity.builder().userId(userId).name("Espinacas").description("Espinacas baby frescas").category("Verduras").quantity(1).imageUrl("https://images.pexels.com/photos/2325843/pexels-photo-2325843.jpeg?auto=compress&cs=tinysrgb&w=400").build());
-        ProductEntity pan      = productRepo.save(ProductEntity.builder().userId(userId).name("Pan integral").description("Pan de molde integral").category("Panadería").quantity(1).imageUrl("https://images.pexels.com/photos/1775043/pexels-photo-1775043.jpeg?auto=compress&cs=tinysrgb&w=400").build());
-        ProductEntity huevos   = productRepo.save(ProductEntity.builder().userId(userId).name("Huevos").description("Docena de huevos de granja").category("Proteínas").quantity(12).imageUrl("https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg?auto=compress&cs=tinysrgb&w=400").build());
-        productRepo.save(ProductEntity.builder().userId(userId).name("Zanahorias").description("Zanahorias medianas").category("Verduras").quantity(4).imageUrl("https://images.pexels.com/photos/143133/pexels-photo-143133.jpeg?auto=compress&cs=tinysrgb&w=400").build());
+        // --- Productos --- (vencimientos variados para mostrar el semáforo: uno vencido, dos por vencer)
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+        ProductEntity leche    = productRepo.save(ProductEntity.builder().userId(userId).name("Leche entera").description("Leche fresca de vaca").category("Lácteos").quantity(2).imageUrl("https://images.pexels.com/photos/236010/pexels-photo-236010.jpeg?auto=compress&cs=tinysrgb&w=400").expirationDate(today.plusDays(4)).createdAt(now).build());
+        ProductEntity manzanas = productRepo.save(ProductEntity.builder().userId(userId).name("Manzanas Fuji").description("Manzanas dulces y crujientes").category("Frutas").quantity(6).imageUrl("https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=400").expirationDate(today.plusDays(12)).createdAt(now).build());
+        ProductEntity pollo    = productRepo.save(ProductEntity.builder().userId(userId).name("Pechuga de pollo").description("Pechuga sin hueso").category("Carnes").quantity(1).imageUrl("https://images.pexels.com/photos/4110375/pexels-photo-4110375.jpeg?auto=compress&cs=tinysrgb&w=400").expirationDate(today.plusDays(2)).createdAt(now).build());
+        ProductEntity yogur    = productRepo.save(ProductEntity.builder().userId(userId).name("Yogur griego").description("Yogur natural sin azúcar").category("Lácteos").quantity(3).imageUrl("https://images.pexels.com/photos/704971/pexels-photo-704971.jpeg?auto=compress&cs=tinysrgb&w=400").expirationDate(today.plusDays(1)).createdAt(now).build());
+        ProductEntity espinaca = productRepo.save(ProductEntity.builder().userId(userId).name("Espinacas").description("Espinacas baby frescas").category("Verduras").quantity(1).imageUrl("https://images.pexels.com/photos/2325843/pexels-photo-2325843.jpeg?auto=compress&cs=tinysrgb&w=400").expirationDate(today.plusDays(3)).createdAt(now).build());
+        ProductEntity pan      = productRepo.save(ProductEntity.builder().userId(userId).name("Pan integral").description("Pan de molde integral").category("Panadería").quantity(1).imageUrl("https://images.pexels.com/photos/1775043/pexels-photo-1775043.jpeg?auto=compress&cs=tinysrgb&w=400").expirationDate(today.minusDays(1)).createdAt(now).build());
+        ProductEntity huevos   = productRepo.save(ProductEntity.builder().userId(userId).name("Huevos").description("Docena de huevos de granja").category("Proteínas").quantity(12).imageUrl("https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg?auto=compress&cs=tinysrgb&w=400").expirationDate(today.plusDays(20)).createdAt(now).build());
+        productRepo.save(ProductEntity.builder().userId(userId).name("Zanahorias").description("Zanahorias medianas").category("Verduras").quantity(4).imageUrl("https://images.pexels.com/photos/143133/pexels-photo-143133.jpeg?auto=compress&cs=tinysrgb&w=400").expirationDate(today.plusDays(8)).createdAt(now).build());
 
         // --- Historial ---
         saveHistory(userId, leche.getId(),    "Leche entera",    "Lácteos",   "CONSUMED", 1, LocalDateTime.now().minusDays(6));
