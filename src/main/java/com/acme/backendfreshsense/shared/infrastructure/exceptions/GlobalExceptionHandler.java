@@ -1,5 +1,7 @@
 package com.acme.backendfreshsense.shared.infrastructure.exceptions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -12,6 +14,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /** Preserva el código de las excepciones con status explícito (ej. 401 de CurrentUser). */
     @ExceptionHandler(ResponseStatusException.class)
@@ -50,6 +54,15 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(409, ex.getMessage()));
     }
 
+    /** Body ilegible (JSON malformado o codificación inválida) → 400, no 500. */
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableBody(
+            org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(400, "Cuerpo de la petición inválido o mal codificado"));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors()
@@ -63,6 +76,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+        // El detalle NO se expone al cliente, pero debe quedar en el log del servidor:
+        // sin esto los 500 son indiagnosticables en producción.
+        log.error("Error no controlado: {}", ex.getMessage(), ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse(500, "Error interno del servidor"));
