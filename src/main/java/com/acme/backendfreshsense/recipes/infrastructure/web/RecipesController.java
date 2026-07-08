@@ -192,4 +192,22 @@ public class RecipesController {
     public ResponseEntity<RecipeResponse> create(@Valid @RequestBody CreateRecipeRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(recipesFeignClient.create(request));
     }
+
+    @Operation(
+        summary = "Generar recetas nuevas con IA",
+        description = "Genera un lote de recetas nuevas con OpenAI (5 desayunos, 10 comidas, 5 snacks), " +
+                      "cada una con imagen de Pexels, evitando duplicar platos ya existentes, y las agrega al catálogo. " +
+                      "La operación puede tardar 1-2 minutos."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Recetas generadas y agregadas al catálogo",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "401", description = "Token ausente o inválido",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                examples = @ExampleObject(value = "{\"error\": \"No autenticado\"}")))
+    })
+    @PostMapping("/generate-batch")
+    public ResponseEntity<List<RecipeResponse>> generateBatch() {
+        return ResponseEntity.status(HttpStatus.CREATED).body(recipesFeignClient.generateBatch());
+    }
 }

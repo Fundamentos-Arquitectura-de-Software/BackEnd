@@ -33,9 +33,14 @@ public class OpenAiRecipeClient {
 
     /**
      * Genera 'count' recetas para el 'type' dado (Breakfast, Meals, Snacks).
+     * Recibe los títulos ya existentes en el catálogo para que la IA no los repita.
      * Devuelve pares receta + query de búsqueda de imagen (en inglés).
      */
-    public List<GeneratedRecipe> generateBatch(String type, int count) {
+    public List<GeneratedRecipe> generateBatch(String type, int count, List<String> existingTitles) {
+
+        String avoidList = existingTitles.isEmpty()
+                ? "(ninguno)"
+                : String.join("; ", existingTitles);
 
         String systemPrompt = """
             Eres un chef experto. Genera %d recetas de cocina ORIGINALES y DIFERENTES entre sí,
@@ -43,7 +48,12 @@ public class OpenAiRecipeClient {
 
             Reglas:
             - No repitas el mismo plato ni ideas muy similares entre las %d recetas.
+            - PROHIBIDO generar platos que ya existen en el catálogo (ni con otro nombre parecido):
+              %s
             - Varía los niveles de dificultad entre Easy, Intermediate y Advanced.
+            - En "ingredients" usa nombres CORTOS y COMUNES en español, un alimento por entrada,
+              sin marcas, cantidades ni adjetivos largos (ej: "Huevos", "Leche", "Espinacas",
+              "Pechuga de pollo", "Arroz", "Queso"). Así se pueden cruzar con el inventario del usuario.
             - Para cada receta agrega un campo "imageQuery": 2-4 palabras EN INGLÉS,
               simples y genéricas, que describan visualmente el plato para buscarlo
               en un banco de imágenes de stock (ej: "pancakes berries", "chicken rice bowl").
@@ -65,7 +75,7 @@ public class OpenAiRecipeClient {
               ]
             }
             No incluyas explicaciones ni markdown, solo el JSON.
-            """.formatted(count, type, count, type);
+            """.formatted(count, type, count, avoidList, type);
 
         Map<String, Object> body = Map.of(
                 "model", model,
