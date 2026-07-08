@@ -3,6 +3,7 @@ package com.acme.backendfreshsense.recipes.infrastructure.web;
 import com.acme.backendfreshsense.recipes.application.dto.CreateRecipeRequest;
 import com.acme.backendfreshsense.recipes.application.dto.RecipeResponse;
 import com.acme.backendfreshsense.recipes.infrastructure.feign.RecipesFeignClient;
+import com.acme.backendfreshsense.shared.infrastructure.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -65,7 +66,7 @@ public class RecipesController {
     })
     @GetMapping
     public List<RecipeResponse> getAll() {
-        return recipesFeignClient.getAll();
+        return recipesFeignClient.getAll(CurrentUser.id());
     }
 
     @Operation(
@@ -126,7 +127,7 @@ public class RecipesController {
     @GetMapping("/premium")
     @PreAuthorize("hasAnyRole('USER_PREMIUM', 'ADMIN')")
     public ResponseEntity<List<RecipeResponse>> getPremium() {
-        return recipesFeignClient.getPremium();
+        return recipesFeignClient.getPremium(CurrentUser.id());
     }
 
     @Operation(
@@ -208,6 +209,6 @@ public class RecipesController {
     })
     @PostMapping("/generate-batch")
     public ResponseEntity<List<RecipeResponse>> generateBatch() {
-        return ResponseEntity.status(HttpStatus.CREATED).body(recipesFeignClient.generateBatch());
+        return ResponseEntity.status(HttpStatus.CREATED).body(recipesFeignClient.generateBatch(CurrentUser.id()));
     }
 }

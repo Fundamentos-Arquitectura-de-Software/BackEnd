@@ -19,9 +19,10 @@ public class RecipesController {
     private final RecipeService recipeService;
     private final RecipeBatchGenerationService recipeBatchGenerationService;
 
+    /** Con userId devuelve las base + las propias del usuario; sin userId, todo el catálogo. */
     @GetMapping
-    public List<RecipeResponse> getAll() {
-        return recipeService.getAll();
+    public List<RecipeResponse> getAll(@RequestParam(required = false) Long userId) {
+        return recipeService.getVisibleTo(userId);
     }
 
     @GetMapping("/{id}")
@@ -31,8 +32,8 @@ public class RecipesController {
 
     /** Devuelve recetas de nivel avanzado — la seguridad (PREMIUM/ADMIN) se aplica en el monolito */
     @GetMapping("/premium")
-    public ResponseEntity<List<RecipeResponse>> getPremium() {
-        List<RecipeResponse> premium = recipeService.getAll().stream()
+    public ResponseEntity<List<RecipeResponse>> getPremium(@RequestParam(required = false) Long userId) {
+        List<RecipeResponse> premium = recipeService.getVisibleTo(userId).stream()
                 .filter(r -> "advanced".equalsIgnoreCase(r.getLevel())
                         || "expert".equalsIgnoreCase(r.getLevel())
                         || "difícil".equalsIgnoreCase(r.getLevel()))
@@ -46,12 +47,12 @@ public class RecipesController {
     }
 
     /**
-     * Genera un catálogo completo con IA (5 desayunos, 10 almuerzos, 5 snacks),
-     * cada uno con una imagen real buscada en Pexels, y lo persiste en la BD.
+     * Genera recetas con IA (5 desayunos, 10 almuerzos, 5 snacks) PRIVADAS del usuario,
+     * cada una con una imagen real buscada en Pexels, y las persiste en la BD.
      */
     @PostMapping("/generate-batch")
-    public ResponseEntity<List<RecipeResponse>> generateBatch() {
-        List<RecipeResponse> generated = recipeBatchGenerationService.generateFullCatalog();
+    public ResponseEntity<List<RecipeResponse>> generateBatch(@RequestParam Long userId) {
+        List<RecipeResponse> generated = recipeBatchGenerationService.generateFullCatalog(userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(generated);
     }
 }

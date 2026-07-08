@@ -13,6 +13,7 @@ import java.util.List;
 public class Recipe {
 
     private Long id;
+    private Long userId; // null = receta base compartida; con valor = privada del usuario
     private String title;
     private String description;
     private String imageUrl;

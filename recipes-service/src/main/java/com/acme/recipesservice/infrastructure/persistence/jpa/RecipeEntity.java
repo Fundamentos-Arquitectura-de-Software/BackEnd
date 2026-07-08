@@ -19,6 +19,10 @@ public class RecipeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // null = receta base del catálogo (visible para todos); con valor = receta privada del usuario
+    @Column(name = "user_id")
+    private Long userId;
+
     @Column(nullable = false, length = 150)
     private String title;
 

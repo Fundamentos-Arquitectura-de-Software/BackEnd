@@ -46,8 +46,9 @@ public class NotificationsPersistenceConfig {
     public NotificationService notificationService(InAppChannel inAppChannel,
                                                     EmailChannel emailChannel,
                                                     PreferenceFilter preferenceFilter,
-                                                    NotificationPreferenceRepository preferenceRepository) {
+                                                    NotificationPreferenceRepository preferenceRepository,
+                                                    InAppNotificationRepository inAppNotificationRepository) {
         List<INotificationChannel> channels = List.of(inAppChannel, emailChannel);
-        return new NotificationService(channels, preferenceFilter, preferenceRepository);
+        return new NotificationService(channels, preferenceFilter, preferenceRepository, inAppNotificationRepository);
     }
 }
