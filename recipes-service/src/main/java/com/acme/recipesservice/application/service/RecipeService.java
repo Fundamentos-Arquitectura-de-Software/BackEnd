@@ -20,6 +20,17 @@ public class RecipeService {
         return recipeRepository.findAll().stream().map(this::toResponse).toList();
     }
 
+    /** Recetas visibles para el usuario: las base (compartidas) + las generadas por él. */
+    public List<RecipeResponse> getVisibleTo(Long userId) {
+        if (userId == null) return getAll();
+        return recipeRepository.findVisibleTo(userId).stream().map(this::toResponse).toList();
+    }
+
+    /** Cuántas recetas propias (generadas) tiene el usuario. */
+    public long countOwnedBy(Long userId) {
+        return recipeRepository.countOwnedBy(userId);
+    }
+
     public RecipeResponse getById(Long id) {
         return recipeRepository.findById(id)
                 .map(this::toResponse)
@@ -27,7 +38,13 @@ public class RecipeService {
     }
 
     public RecipeResponse create(CreateRecipeRequest request) {
+        return create(request, null);
+    }
+
+    /** Crea una receta; con userId es privada del usuario, con null es del catálogo base. */
+    public RecipeResponse create(CreateRecipeRequest request, Long userId) {
         Recipe recipe = Recipe.builder()
+                .userId(userId)
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .imageUrl(request.getImage())

@@ -19,6 +19,7 @@ public class RecipeRepositoryAdapter implements RecipeRepository {
     private static Recipe toDomain(RecipeEntity e) {
         return Recipe.builder()
                 .id(e.getId())
+                .userId(e.getUserId())
                 .title(e.getTitle())
                 .description(e.getDescription())
                 .imageUrl(e.getImageUrl())
@@ -34,6 +35,7 @@ public class RecipeRepositoryAdapter implements RecipeRepository {
     private static RecipeEntity toEntity(Recipe r) {
         return RecipeEntity.builder()
                 .id(r.getId())
+                .userId(r.getUserId())
                 .title(r.getTitle())
                 .description(r.getDescription())
                 .imageUrl(r.getImageUrl())
@@ -49,6 +51,16 @@ public class RecipeRepositoryAdapter implements RecipeRepository {
     @Override
     public List<Recipe> findAll() {
         return jpa.findAll().stream().map(RecipeRepositoryAdapter::toDomain).toList();
+    }
+
+    @Override
+    public List<Recipe> findVisibleTo(Long userId) {
+        return jpa.findByUserIdIsNullOrUserId(userId).stream().map(RecipeRepositoryAdapter::toDomain).toList();
+    }
+
+    @Override
+    public long countOwnedBy(Long userId) {
+        return jpa.countByUserId(userId);
     }
 
     @Override

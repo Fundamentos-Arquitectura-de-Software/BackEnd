@@ -16,17 +16,17 @@ import java.util.List;
 public interface RecipesFeignClient {
 
     @GetMapping("/api/recipes")
-    List<RecipeResponse> getAll();
+    List<RecipeResponse> getAll(@RequestParam("userId") Long userId);
 
     @GetMapping("/api/recipes/{id}")
     ResponseEntity<RecipeResponse> getById(@PathVariable("id") Long id);
 
     @GetMapping("/api/recipes/premium")
-    ResponseEntity<List<RecipeResponse>> getPremium();
+    ResponseEntity<List<RecipeResponse>> getPremium(@RequestParam("userId") Long userId);
 
     @PostMapping(value = "/api/recipes", consumes = "application/json")
     RecipeResponse create(@RequestBody CreateRecipeRequest request);
 
     @PostMapping("/api/recipes/generate-batch")
-    List<RecipeResponse> generateBatch();
+    List<RecipeResponse> generateBatch(@RequestParam("userId") Long userId);
 }

@@ -18,8 +18,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RecipeBatchGenerationService {
 
-    /** Tope del catálogo: la generación nunca lo hace crecer más allá de este número. */
-    private static final int MAX_CATALOG_SIZE = 100;
+    /** Tope de recetas PROPIAS por usuario (además de las ~40 base compartidas). */
+    private static final int MAX_OWN_RECIPES = 60;
 
     /** Imagen genérica de comida (Pexels, verificada) si la búsqueda no encuentra nada. */
     private static final String FALLBACK_IMAGE =
@@ -30,32 +30,33 @@ public class RecipeBatchGenerationService {
     private final RecipeService recipeService;
 
     /**
-     * Genera y persiste el catálogo completo:
+     * Genera y persiste un lote de recetas PRIVADAS del usuario:
      * 5 desayunos, 10 almuerzos, 5 snacks — cada uno con imagen real de Pexels.
-     * A la IA se le pasan los títulos ya existentes para que no los repita, y además
-     * se descarta cualquier generado cuyo título ya exista (comparación sin tildes/mayúsculas).
+     * A la IA se le pasan los títulos que el usuario ya ve (base + propias) para que
+     * no los repita, y además se descarta cualquier generado cuyo título ya exista
+     * (comparación sin tildes/mayúsculas).
      */
-    public List<RecipeResponse> generateFullCatalog() {
-        List<String> existingTitles = recipeService.getAll().stream()
-                .map(RecipeResponse::getTitle)
-                .toList();
+    public List<RecipeResponse> generateFullCatalog(Long userId) {
+        List<RecipeResponse> visible = recipeService.getVisibleTo(userId);
+        List<String> existingTitles = visible.stream().map(RecipeResponse::getTitle).toList();
         Set<String> knownTitles = new HashSet<>(existingTitles.stream().map(this::normalize).toList());
 
-        // Tope de catálogo: solo se genera lo que quepa hasta MAX_CATALOG_SIZE.
-        int available = MAX_CATALOG_SIZE - existingTitles.size();
+        // Tope por usuario: solo se genera lo que quepa hasta MAX_OWN_RECIPES propias.
+        long owned = recipeService.countOwnedBy(userId);
+        int available = (int) (MAX_OWN_RECIPES - owned);
         if (available <= 0) return List.of();
         int breakfast = Math.min(5, available);
         int meals = Math.min(10, available - breakfast);
         int snacks = Math.min(5, available - breakfast - meals);
 
         List<RecipeResponse> saved = new ArrayList<>();
-        saved.addAll(generateAndSave("Breakfast", breakfast, existingTitles, knownTitles));
-        saved.addAll(generateAndSave("Meals", meals, existingTitles, knownTitles));
-        saved.addAll(generateAndSave("Snacks", snacks, existingTitles, knownTitles));
+        saved.addAll(generateAndSave(userId, "Breakfast", breakfast, existingTitles, knownTitles));
+        saved.addAll(generateAndSave(userId, "Meals", meals, existingTitles, knownTitles));
+        saved.addAll(generateAndSave(userId, "Snacks", snacks, existingTitles, knownTitles));
         return saved;
     }
 
-    private List<RecipeResponse> generateAndSave(String type, int count,
+    private List<RecipeResponse> generateAndSave(Long userId, String type, int count,
                                                  List<String> existingTitles, Set<String> knownTitles) {
         if (count <= 0) return List.of();
         List<GeneratedRecipe> generated = openAiRecipeClient.generateBatch(type, count, existingTitles);
@@ -78,7 +79,7 @@ public class RecipeBatchGenerationService {
                     .steps(g.recipe().getSteps())
                     .build();
 
-            result.add(recipeService.create(requestWithImage));
+            result.add(recipeService.create(requestWithImage, userId));
         }
         return result;
     }
