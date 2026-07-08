@@ -2,6 +2,7 @@ package com.acme.recipesservice.infrastructure.web;
 
 import com.acme.recipesservice.application.dto.CreateRecipeRequest;
 import com.acme.recipesservice.application.dto.RecipeResponse;
+import com.acme.recipesservice.application.service.RecipeBatchGenerationService;
 import com.acme.recipesservice.application.service.RecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import java.util.List;
 public class RecipesController {
 
     private final RecipeService recipeService;
+    private final RecipeBatchGenerationService recipeBatchGenerationService;
 
     @GetMapping
     public List<RecipeResponse> getAll() {
@@ -41,5 +43,15 @@ public class RecipesController {
     @PostMapping(consumes = "application/json")
     public ResponseEntity<RecipeResponse> create(@RequestBody CreateRecipeRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(recipeService.create(request));
+    }
+
+    /**
+     * Genera un catálogo completo con IA (5 desayunos, 10 almuerzos, 5 snacks),
+     * cada uno con una imagen real buscada en Pexels, y lo persiste en la BD.
+     */
+    @PostMapping("/generate-batch")
+    public ResponseEntity<List<RecipeResponse>> generateBatch() {
+        List<RecipeResponse> generated = recipeBatchGenerationService.generateFullCatalog();
+        return ResponseEntity.status(HttpStatus.CREATED).body(generated);
     }
 }

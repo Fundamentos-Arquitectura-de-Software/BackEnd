@@ -26,4 +26,7 @@ public interface RecipesFeignClient {
 
     @PostMapping(value = "/api/recipes", consumes = "application/json")
     RecipeResponse create(@RequestBody CreateRecipeRequest request);
+
+    @PostMapping("/api/recipes/generate-batch")
+    List<RecipeResponse> generateBatch();
 }
